@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Jobdesk & Aktivitas Harian</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .toast-enter {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        .toast-exit {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+
+    <!-- Navbar -->
+    <nav class="bg-indigo-600 text-white shadow-md">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="briefcase" class="w-6 h-6"></i>
+                    <span class="font-bold text-xl tracking-tight">WorkLog</span>
+                </div>
+                <div class="flex space-x-2 sm:space-x-4 overflow-x-auto">
+                    <button onclick="switchTab('jobdesk')" id="nav-jobdesk" class="px-3 py-2 rounded-md text-sm font-medium bg-indigo-700 transition-colors whitespace-nowrap">Jobdesk</button>
+                    <button onclick="switchTab('activity')" id="nav-activity" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 transition-colors whitespace-nowrap">Aktivitas Harian</button>
+                    <button onclick="switchTab('settings')" id="nav-settings" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 transition-colors whitespace-nowrap flex items-center gap-1">
+                        <i data-lucide="settings" class="w-4 h-4"></i> Pengaturan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow w-full max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- ================= TAB JOBDESK ================= -->
+        <div id="tab-jobdesk" class="space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-indigo-700">
+                    <i data-lucide="clipboard-list" class="w-5 h-5"></i> Tambah Jobdesk Baru
+                </h2>
+                <form id="form-jobdesk" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Peran / Jobdesk</label>
+                        <input type="text" id="jd-title" required placeholder="Contoh: Social Media Specialist" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Deskripsi Tanggung Jawab</label>
+                        <textarea id="jd-desc" required rows="3" placeholder="Jelaskan secara singkat tanggung jawab utama pada peran ini..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"></textarea>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i> Simpan Jobdesk
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-semibold mb-3 text-slate-700">Daftar Jobdesk Anda</h3>
+                <div id="list-jobdesk" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="col-span-full text-center py-8 text-slate-500 bg-white rounded-xl border border-slate-200 border-dashed">
+                        Belum ada jobdesk yang ditambahkan.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB ACTIVITY ================= -->
+        <div id="tab-activity" class="space-y-6 hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-emerald-600">
+                    <i data-lucide="calendar-check" class="w-5 h-5"></i> Catat Aktivitas Harian
+                </h2>
+                <form id="form-activity" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal</label>
+                            <input type="date" id="act-date" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Terkait Jobdesk</label>
+                            <select id="act-jobdesk" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white">
+                                <option value="" disabled selected>Pilih Jobdesk...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Aktivitas / Tugas yang Dikerjakan</label>
+                        <input type="text" id="act-task" required placeholder="Contoh: Membuat konten desain untuk Instagram" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Status Penyelesaian</label>
+                        <div class="flex gap-4 mt-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="act-status" value="Belum Selesai" class="text-emerald-600 focus:ring-emerald-500" checked>
+                                <span class="text-sm">Belum Selesai</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="act-status" value="Sedang Proses" class="text-blue-600 focus:ring-blue-500">
+                                <span class="text-sm">Sedang Proses</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="act-status" value="Selesai" class="text-emerald-600 focus:ring-emerald-500">
+                                <span class="text-sm">Selesai</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Upload File (Hanya muncul jika status "Selesai") -->
+                    <div id="photo-upload-group" class="hidden p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                        <label class="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
+                            <i data-lucide="image" class="w-4 h-4 text-emerald-600"></i> Upload Bukti Foto (Otomatis ke Telegram)
+                        </label>
+                        <input type="file" id="act-photo" accept="image/*" class="w-full mt-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all">
+                        <p class="text-xs text-slate-500 mt-2">Foto ini wajib diunggah karena status ditandai "Sedang Proses" atau "Selesai".</p>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" id="btn-submit-activity" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i> Catat Aktivitas
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-semibold mb-3 text-slate-700">Riwayat Aktivitas</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-sm text-slate-600">
+                                    <th class="p-4 font-semibold">Tanggal</th>
+                                    <th class="p-4 font-semibold">Jobdesk</th>
+                                    <th class="p-4 font-semibold">Aktivitas</th>
+                                    <th class="p-4 font-semibold">Status</th>
+                                    <th class="p-4 font-semibold text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="list-activity" class="divide-y divide-slate-200 text-sm">
+                                <tr>
+                                    <td colspan="5" class="p-8 text-center text-slate-500">Belum ada aktivitas harian yang dicatat.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB PENGATURAN ================= -->
+        <div id="tab-settings" class="space-y-6 hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-slate-800">
+                    <i data-lucide="send" class="w-5 h-5 text-blue-500"></i> Pengaturan Telegram Bot
+                </h2>
+                <div class="mb-6 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
+                    <p class="mb-2"><strong>Cara Mengatur:</strong></p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Buat bot melalui <strong>@BotFather</strong> di Telegram dan dapatkan <strong>Bot Token</strong>-nya.</li>
+                        <li>Masukkan bot tersebut ke Grup Telegram Anda.</li>
+                        <li>Dapatkan <strong>Chat ID</strong> grup tersebut (biasanya diawali tanda minus, misal: <code class="bg-blue-100 px-1 rounded">-100123456789</code>).</li>
+                    </ul>
+                </div>
+                <form id="form-settings" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Telegram Bot Token</label>
+                        <input type="text" id="tg-token" value="8614464949:AAGt0GmOes7efeB7HqugsLjQNe9TBVwt6bI" placeholder="1234567890:ABCdefGhIJKlmNoPQRsTUVWxyz" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Chat ID (Grup/Pribadi)</label>
+                        <input type="text" id="tg-chatid" value="-5299037561" placeholder="-100xxxxxxxxx" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono text-sm">
+                    </div>
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                            <i data-lucide="save" class="w-4 h-4"></i> Simpan Pengaturan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Upload Telegram (Saat klik ubah status di tabel) -->
+    <div id="modal-telegram" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300" id="modal-telegram-content">
+            <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                    <i data-lucide="send" class="w-5 h-5 text-blue-500"></i> Kirim Laporan Selesai
+                </h3>
+                <button onclick="closeTelegramModal()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-slate-600 mb-4" id="modal-status-text">Anda menandai aktivitas ini sebagai <strong>"Selesai"</strong>. Silakan unggah foto bukti untuk dikirimkan ke Telegram.</p>
+                <div class="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Aktivitas</p>
+                    <p class="text-sm font-medium text-slate-800" id="modal-task-name">-</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Pilih Foto Bukti</label>
+                    <input type="file" id="modal-photo" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all">
+                </div>
+            </div>
+            <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+                <button onclick="closeTelegramModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">Batal</button>
+                <button onclick="submitTelegramModal()" id="btn-modal-submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2">
+                    <i data-lucide="send" class="w-4 h-4"></i> Kirim & Selesaikan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <script>
+        // State Management (In-Memory)
+        let jobdesks = [];
+        let activities = [];
+        let pendingActivityIdForTelegram = null;
+        let targetStatusForModal = null;
+
+        // Inisialisasi ikon Lucide
+        lucide.createIcons();
+
+        // Mengatur tanggal default
+        document.getElementById('act-date').valueAsDate = new Date();
+
+        // Setup Nilai Default Telegram
+        const defaultBotToken = '8614464949:AAGt0GmOes7efeB7HqugsLjQNe9TBVwt6bI';
+        const defaultChatId = '-5299037561';
+
+        // Jika localStorage kosong, isi dengan nilai default
+        if (!localStorage.getItem('tg_token')) localStorage.setItem('tg_token', defaultBotToken);
+        if (!localStorage.getItem('tg_chatid')) localStorage.setItem('tg_chatid', defaultChatId);
+
+        // Load Pengaturan dari LocalStorage ke form input
+        document.getElementById('tg-token').value = localStorage.getItem('tg_token');
+        document.getElementById('tg-chatid').value = localStorage.getItem('tg_chatid');
+
+        // Navigasi Tab
+        function switchTab(tabId) {
+            ['jobdesk', 'activity', 'settings'].forEach(id => {
+                document.getElementById(`tab-${id}`).classList.add('hidden');
+                const nav = document.getElementById(`nav-${id}`);
+                nav.classList.remove('bg-indigo-700');
+                nav.classList.add('hover:bg-indigo-500');
+            });
+
+            if (tabId === 'activity') {
+                if (jobdesks.length === 0 && activities.length === 0) {
+                    showToast('Harap tambahkan minimal 1 Jobdesk terlebih dahulu.', 'warning');
+                    switchTab('jobdesk');
+                    return;
+                }
+                updateJobdeskSelect();
+            }
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            activeNav.classList.add('bg-indigo-700');
+            activeNav.classList.remove('hover:bg-indigo-500');
+        }
+
+        // ================= FUNGSI TELEGRAM API =================
+        async function sendToTelegram(file, caption) {
+            const token = localStorage.getItem('tg_token');
+            const chatId = localStorage.getItem('tg_chatid');
+
+            if (!token || !chatId) {
+                throw new Error('Pengaturan Telegram (Token & Chat ID) belum diatur di tab Pengaturan!');
+            }
+
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('photo', file);
+            formData.append('caption', caption);
+
+            const response = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            if (!data.ok) {
+                throw new Error(data.description || 'Gagal mengirim foto ke Telegram');
+            }
+            return data;
+        }
+
+        // ================= SETTINGS LOGIC =================
+        document.getElementById('form-settings').addEventListener('submit', function(e) {
+            e.preventDefault();
+            localStorage.setItem('tg_token', document.getElementById('tg-token').value.trim());
+            localStorage.setItem('tg_chatid', document.getElementById('tg-chatid').value.trim());
+            showToast('Pengaturan Telegram berhasil disimpan!', 'success');
+        });
+
+        // ================= JOBDESK LOGIC =================
+        const formJobdesk = document.getElementById('form-jobdesk');
+        formJobdesk.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const title = document.getElementById('jd-title').value.trim();
+            const desc = document.getElementById('jd-desc').value.trim();
+
+            if (title && desc) {
+                const newJobdesk = { id: Date.now().toString(), title: title, desc: desc };
+                jobdesks.push(newJobdesk);
+                renderJobdesks();
+                formJobdesk.reset();
+                showToast('Jobdesk berhasil ditambahkan!', 'success');
+            }
+        });
+
+        function deleteJobdesk(id) {
+            const isUsed = activities.some(act => act.jobdeskId === id);
+            if (isUsed) {
+                showToast('Gagal: Jobdesk ini sedang digunakan pada riwayat aktivitas.', 'error');
+                return;
+            }
+            jobdesks = jobdesks.filter(jd => jd.id !== id);
+            renderJobdesks();
+            updateJobdeskSelect();
+            showToast('Jobdesk dihapus.', 'info');
+        }
+
+        function renderJobdesks() {
+            const container = document.getElementById('list-jobdesk');
+            if (jobdesks.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500 bg-white rounded-xl border border-slate-200 border-dashed">Belum ada jobdesk yang ditambahkan.</div>`;
+                return;
+            }
+
+            container.innerHTML = jobdesks.map(jd => `
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-bold text-lg text-slate-800 mb-2">${jd.title}</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed">${jd.desc}</p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-100 flex justify-end">
+                        <button onclick="deleteJobdesk('${jd.id}')" class="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-1 transition-colors">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+            updateJobdeskSelect();
+        }
+
+        // ================= ACTIVITY LOGIC =================
+        const formActivity = document.getElementById('form-activity');
+        const photoGroup = document.getElementById('photo-upload-group');
+        const photoInput = document.getElementById('act-photo');
+        const btnSubmitActivity = document.getElementById('btn-submit-activity');
+
+        // Tampilkan/Sembunyikan upload foto berdasarkan radio status
+        document.querySelectorAll('input[name="act-status"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'Selesai' || e.target.value === 'Sedang Proses') {
+                    photoGroup.classList.remove('hidden');
+                    photoInput.required = true;
+                } else {
+                    photoGroup.classList.add('hidden');
+                    photoInput.required = false;
+                }
+            });
+        });
+
+        function updateJobdeskSelect() {
+            const select = document.getElementById('act-jobdesk');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="" disabled selected>Pilih Jobdesk...</option>' + 
+                jobdesks.map(jd => `<option value="${jd.id}">${jd.title}</option>`).join('');
+            if (jobdesks.some(jd => jd.id === currentValue)) select.value = currentValue;
+        }
+
+        formActivity.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const date = document.getElementById('act-date').value;
+            const jobdeskId = document.getElementById('act-jobdesk').value;
+            const task = document.getElementById('act-task').value.trim();
+            const status = document.querySelector('input[name="act-status"]:checked').value;
+            const jdData = jobdesks.find(j => j.id === jobdeskId);
+            
+            // Format caption
+            const captionHeader = status === 'Selesai' ? '✅ *TUGAS SELESAI*' : '⏳ *TUGAS SEDANG DIPROSES*';
+            const caption = `${captionHeader}\n\n📋 *Jobdesk:* ${jdData ? jdData.title : 'Umum'}\n📝 *Aktivitas:* ${task}\n📅 *Tanggal:* ${date}`;
+
+            if (status === 'Selesai' || status === 'Sedang Proses') {
+                const file = photoInput.files[0];
+                if (!file) return showToast('Pilih foto bukti terlebih dahulu!', 'warning');
+                
+                btnSubmitActivity.disabled = true;
+                btnSubmitActivity.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim...';
+                lucide.createIcons();
+
+                try {
+                    await sendToTelegram(file, caption);
+                    showToast('Bukti berhasil dikirim ke Telegram!', 'success');
+                } catch (err) {
+                    btnSubmitActivity.disabled = false;
+                    btnSubmitActivity.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Catat Aktivitas';
+                    lucide.createIcons();
+                    return showToast(err.message, 'error');
+                }
+            }
+
+            // Simpan ke array
+            const newActivity = {
+                id: Date.now().toString(),
+                date: date,
+                jobdeskId: jobdeskId,
+                jobdeskTitle: jdData ? jdData.title : 'Jobdesk Terhapus',
+                task: task,
+                status: status
+            };
+            activities.unshift(newActivity);
+            renderActivities();
+            
+            // Reset form UI
+            document.getElementById('act-task').value = ''; 
+            photoInput.value = '';
+            btnSubmitActivity.disabled = false;
+            btnSubmitActivity.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Catat Aktivitas';
+            lucide.createIcons();
+            
+            if(status === 'Belum Selesai') showToast('Aktivitas berhasil dicatat!', 'success');
+        });
+
+        function deleteActivity(id) {
+            activities = activities.filter(act => act.id !== id);
+            renderActivities();
+            showToast('Aktivitas dihapus.', 'info');
+        }
+
+        // ================= MODAL TELEGRAM (KLIK BADGE TABEL) =================
+        function toggleActivityStatus(id) {
+            const act = activities.find(a => a.id === id);
+            if(act) {
+                if(act.status === 'Belum Selesai') {
+                    // Minta bukti foto sebelum jadi "Sedang Proses"
+                    openTelegramModal(act, 'Sedang Proses');
+                } else if(act.status === 'Sedang Proses') {
+                    // Minta bukti foto sebelum jadi "Selesai"
+                    openTelegramModal(act, 'Selesai');
+                } else {
+                    // Dari Selesai -> Belum Selesai (Tidak perlu foto)
+                    act.status = 'Belum Selesai';
+                    renderActivities();
+                }
+            }
+        }
+
+        function openTelegramModal(activity, targetStatus) {
+            pendingActivityIdForTelegram = activity.id;
+            targetStatusForModal = targetStatus;
+            
+            document.getElementById('modal-status-text').innerHTML = `Anda menandai aktivitas ini sebagai <strong>"${targetStatus}"</strong>. Silakan unggah foto bukti untuk dikirimkan ke Telegram.`;
+            document.getElementById('modal-task-name').textContent = activity.task;
+            
+            const modal = document.getElementById('modal-telegram');
+            const content = document.getElementById('modal-telegram-content');
+            
+            modal.classList.remove('hidden');
+            // Sedikit delay untuk animasi tailwind
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeTelegramModal() {
+            const modal = document.getElementById('modal-telegram');
+            const content = document.getElementById('modal-telegram-content');
+            
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('modal-photo').value = '';
+                pendingActivityIdForTelegram = null;
+            }, 300);
+        }
+
+        async function submitTelegramModal() {
+            const fileInput = document.getElementById('modal-photo');
+            const file = fileInput.files[0];
+            const btnSubmit = document.getElementById('btn-modal-submit');
+
+            if (!file) {
+                showToast('Harap pilih foto bukti terlebih dahulu!', 'warning');
+                return;
+            }
+
+            const act = activities.find(a => a.id === pendingActivityIdForTelegram);
+            if (!act) return;
+
+            const captionHeader = targetStatusForModal === 'Selesai' ? '✅ *TUGAS SELESAI*' : '⏳ *TUGAS SEDANG DIPROSES*';
+            const caption = `${captionHeader}\n\n📋 *Jobdesk:* ${act.jobdeskTitle}\n📝 *Aktivitas:* ${act.task}\n📅 *Tanggal:* ${act.date}`;
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim...';
+            lucide.createIcons();
+
+            try {
+                await sendToTelegram(file, caption);
+                
+                // Ubah status dan render ulang
+                act.status = targetStatusForModal;
+                renderActivities();
+                showToast(`Bukti berhasil dikirim dan aktivitas ditandai "${targetStatusForModal}"!`, 'success');
+                closeTelegramModal();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> Kirim & Selesaikan';
+                lucide.createIcons();
+            }
+        }
+
+        function renderActivities() {
+            const tbody = document.getElementById('list-activity');
+            if (activities.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500">Belum ada aktivitas harian yang dicatat.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = activities.map(act => {
+                let statusBadge = '';
+                if (act.status === 'Selesai') {
+                    statusBadge = `<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold cursor-pointer hover:bg-emerald-200 transition-colors" title="Klik untuk ubah ke Belum Selesai" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
+                } else if (act.status === 'Sedang Proses') {
+                    statusBadge = `<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold cursor-pointer hover:bg-blue-200 transition-colors" title="Klik untuk Selesaikan" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
+                } else {
+                    statusBadge = `<span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold cursor-pointer hover:bg-amber-200 transition-colors" title="Klik untuk Proses" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
+                }
+
+                const dateObj = new Date(act.date);
+                const formattedDate = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors group">
+                        <td class="p-4 align-top whitespace-nowrap">${formattedDate}</td>
+                        <td class="p-4 align-top font-medium text-indigo-700">${act.jobdeskTitle}</td>
+                        <td class="p-4 align-top text-slate-800">${act.task}</td>
+                        <td class="p-4 align-top whitespace-nowrap">${statusBadge}</td>
+                        <td class="p-4 align-top text-right whitespace-nowrap">
+                            <button onclick="deleteActivity('${act.id}')" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            lucide.createIcons();
+        }
+
+        // ================= TOAST NOTIFICATION =================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-slate-800';
+            let icon = '<i data-lucide="info" class="w-5 h-5"></i>';
+            
+            if (type === 'success') { bgClass = 'bg-emerald-600'; icon = '<i data-lucide="check-circle" class="w-5 h-5"></i>'; }
+            else if (type === 'error') { bgClass = 'bg-red-600'; icon = '<i data-lucide="alert-circle" class="w-5 h-5"></i>'; }
+            else if (type === 'warning') { bgClass = 'bg-amber-600'; icon = '<i data-lucide="alert-triangle" class="w-5 h-5"></i>'; }
+
+            toast.className = `toast-enter flex items-center gap-3 text-white px-5 py-3 rounded-lg shadow-lg max-w-sm ${bgClass}`;
+            toast.innerHTML = `${icon} <span class="text-sm font-medium leading-snug">${message}</span>`;
+            
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.replace('toast-enter', 'toast-exit');
+                setTimeout(() => { toast.remove(); }, 500);
+            }, 3500);
+        }
+
+        // Render awal kosong
+        renderJobdesks();
+    </script>
+</body>
+</html>
