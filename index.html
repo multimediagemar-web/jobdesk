@@ -124,10 +124,10 @@
                     <!-- Form Upload File (Hanya muncul jika status "Selesai") -->
                     <div id="photo-upload-group" class="hidden p-4 bg-slate-50 border border-slate-200 rounded-lg">
                         <label class="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
-                            <i data-lucide="image" class="w-4 h-4 text-emerald-600"></i> Upload Bukti Foto (Otomatis ke Telegram)
+                            <i data-lucide="file-up" class="w-4 h-4 text-emerald-600"></i> Upload Bukti (Otomatis ke Telegram)
                         </label>
-                        <input type="file" id="act-photo" accept="image/*" class="w-full mt-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all">
-                        <p class="text-xs text-slate-500 mt-2">Foto ini wajib diunggah karena status ditandai "Sedang Proses" atau "Selesai".</p>
+                        <input type="file" id="act-photo" accept="image/*,video/*" class="w-full mt-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all">
+                        <p class="text-xs text-slate-500 mt-2">Foto/Video wajib diunggah karena status ditandai "Sedang Proses" atau "Selesai" (Maks 50MB).</p>
                     </div>
 
                     <div class="flex justify-end pt-2">
@@ -209,14 +209,14 @@
                 </button>
             </div>
             <div class="p-6">
-                <p class="text-sm text-slate-600 mb-4" id="modal-status-text">Anda menandai aktivitas ini sebagai <strong>"Selesai"</strong>. Silakan unggah foto bukti untuk dikirimkan ke Telegram.</p>
+                <p class="text-sm text-slate-600 mb-4" id="modal-status-text">Anda menandai aktivitas ini sebagai <strong>"Selesai"</strong>. Silakan unggah foto/video bukti untuk dikirimkan ke Telegram.</p>
                 <div class="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                     <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Aktivitas</p>
                     <p class="text-sm font-medium text-slate-800" id="modal-task-name">-</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Pilih Foto Bukti</label>
-                    <input type="file" id="modal-photo" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Pilih Foto/Video Bukti</label>
+                    <input type="file" id="modal-photo" accept="image/*,video/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all">
                 </div>
             </div>
             <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
@@ -231,8 +231,30 @@
     <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
-    <script>
-        // State Management (In-Memory)
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ========================================================
+        // 1. MASUKKAN CONFIG FIREBASE ANDA DI SINI
+        // ========================================================
+        const firebaseConfig = {
+            apiKey: "API_KEY_ANDA",
+            authDomain: "PROJECT_ID.firebaseapp.com",
+            projectId: "PROJECT_ID",
+            storageBucket: "PROJECT_ID.firebasestorage.app",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'worklog-app'; // ID aplikasi untuk path database
+        let currentUser = null;
+
+        // State Management
         let jobdesks = [];
         let activities = [];
         let pendingActivityIdForTelegram = null;
@@ -240,24 +262,60 @@
 
         // Inisialisasi ikon Lucide
         lucide.createIcons();
-
-        // Mengatur tanggal default
         document.getElementById('act-date').valueAsDate = new Date();
 
         // Setup Nilai Default Telegram
         const defaultBotToken = '8614464949:AAGt0GmOes7efeB7HqugsLjQNe9TBVwt6bI';
         const defaultChatId = '-5299037561';
-
-        // Jika localStorage kosong, isi dengan nilai default
         if (!localStorage.getItem('tg_token')) localStorage.setItem('tg_token', defaultBotToken);
         if (!localStorage.getItem('tg_chatid')) localStorage.setItem('tg_chatid', defaultChatId);
-
-        // Load Pengaturan dari LocalStorage ke form input
         document.getElementById('tg-token').value = localStorage.getItem('tg_token');
         document.getElementById('tg-chatid').value = localStorage.getItem('tg_chatid');
 
-        // Navigasi Tab
-        function switchTab(tabId) {
+        // ================= AUTHENTICATION FIREBASE =================
+        signInAnonymously(auth).catch(err => {
+            console.error("Firebase Auth Error:", err);
+            showToast("Gagal terhubung ke database. Pastikan Anonymous Auth diaktifkan di Firebase.", "error");
+        });
+
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                currentUser = user;
+                setupRealtimeListeners();
+            } else {
+                currentUser = null;
+            }
+        });
+
+        // ================= LISTENER FIREBASE REALTIME =================
+        function setupRealtimeListeners() {
+            if (!currentUser) return;
+
+            // Load Jobdesks
+            const jdRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks');
+            onSnapshot(jdRef, (snapshot) => {
+                jobdesks = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                jobdesks.sort((a, b) => b.createdAt - a.createdAt); // Urutkan terbaru di atas
+                renderJobdesks();
+            }, (error) => {
+                console.error(error);
+                showToast("Gagal memuat data Jobdesk.", "error");
+            });
+
+            // Load Activities
+            const actRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
+            onSnapshot(actRef, (snapshot) => {
+                activities = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                activities.sort((a, b) => b.createdAt - a.createdAt); // Urutkan terbaru di atas
+                renderActivities();
+            }, (error) => {
+                console.error(error);
+                showToast("Gagal memuat data Aktivitas.", "error");
+            });
+        }
+
+        // ================= NAVIGASI TAB =================
+        window.switchTab = function(tabId) {
             ['jobdesk', 'activity', 'settings'].forEach(id => {
                 document.getElementById(`tab-${id}`).classList.add('hidden');
                 const nav = document.getElementById(`nav-${id}`);
@@ -268,7 +326,7 @@
             if (tabId === 'activity') {
                 if (jobdesks.length === 0 && activities.length === 0) {
                     showToast('Harap tambahkan minimal 1 Jobdesk terlebih dahulu.', 'warning');
-                    switchTab('jobdesk');
+                    window.switchTab('jobdesk');
                     return;
                 }
                 updateJobdeskSelect();
@@ -278,31 +336,37 @@
             const activeNav = document.getElementById(`nav-${tabId}`);
             activeNav.classList.add('bg-indigo-700');
             activeNav.classList.remove('hover:bg-indigo-500');
-        }
+        };
 
         // ================= FUNGSI TELEGRAM API =================
         async function sendToTelegram(file, caption) {
             const token = localStorage.getItem('tg_token');
             const chatId = localStorage.getItem('tg_chatid');
 
-            if (!token || !chatId) {
-                throw new Error('Pengaturan Telegram (Token & Chat ID) belum diatur di tab Pengaturan!');
-            }
+            if (!token || !chatId) throw new Error('Pengaturan Telegram belum diatur!');
+            
+            const maxSize = 50 * 1024 * 1024;
+            if (file.size > maxSize) throw new Error('Ukuran file terlalu besar! Maksimal 50MB.');
 
             const formData = new FormData();
             formData.append('chat_id', chatId);
-            formData.append('photo', file);
             formData.append('caption', caption);
 
-            const response = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+            let endpoint = 'sendPhoto';
+            if (file.type.startsWith('video/')) {
+                endpoint = 'sendVideo';
+                formData.append('video', file);
+            } else {
+                formData.append('photo', file);
+            }
+
+            const response = await fetch(`https://api.telegram.org/bot${token}/${endpoint}`, {
                 method: 'POST',
                 body: formData
             });
 
             const data = await response.json();
-            if (!data.ok) {
-                throw new Error(data.description || 'Gagal mengirim foto ke Telegram');
-            }
+            if (!data.ok) throw new Error(data.description || 'Gagal mengirim file ke Telegram');
             return data;
         }
 
@@ -314,33 +378,43 @@
             showToast('Pengaturan Telegram berhasil disimpan!', 'success');
         });
 
-        // ================= JOBDESK LOGIC =================
+        // ================= JOBDESK LOGIC (FIREBASE) =================
         const formJobdesk = document.getElementById('form-jobdesk');
-        formJobdesk.addEventListener('submit', function(e) {
+        formJobdesk.addEventListener('submit', async function(e) {
             e.preventDefault();
+            if (!currentUser) return showToast("Menunggu koneksi database...", "warning");
+
             const title = document.getElementById('jd-title').value.trim();
             const desc = document.getElementById('jd-desc').value.trim();
+            const btnSubmit = formJobdesk.querySelector('button[type="submit"]');
 
             if (title && desc) {
-                const newJobdesk = { id: Date.now().toString(), title: title, desc: desc };
-                jobdesks.push(newJobdesk);
-                renderJobdesks();
-                formJobdesk.reset();
-                showToast('Jobdesk berhasil ditambahkan!', 'success');
+                btnSubmit.disabled = true;
+                try {
+                    const jdRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks');
+                    await addDoc(jdRef, { title, desc, createdAt: Date.now() });
+                    formJobdesk.reset();
+                    showToast('Jobdesk berhasil ditambahkan!', 'success');
+                } catch (error) {
+                    showToast(error.message, 'error');
+                } finally {
+                    btnSubmit.disabled = false;
+                }
             }
         });
 
-        function deleteJobdesk(id) {
+        window.deleteJobdesk = async function(id) {
+            if (!currentUser) return;
             const isUsed = activities.some(act => act.jobdeskId === id);
-            if (isUsed) {
-                showToast('Gagal: Jobdesk ini sedang digunakan pada riwayat aktivitas.', 'error');
-                return;
+            if (isUsed) return showToast('Gagal: Jobdesk ini sedang digunakan pada riwayat aktivitas.', 'error');
+            
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks', id));
+                showToast('Jobdesk dihapus.', 'info');
+            } catch (error) {
+                showToast('Gagal menghapus jobdesk', 'error');
             }
-            jobdesks = jobdesks.filter(jd => jd.id !== id);
-            renderJobdesks();
-            updateJobdeskSelect();
-            showToast('Jobdesk dihapus.', 'info');
-        }
+        };
 
         function renderJobdesks() {
             const container = document.getElementById('list-jobdesk');
@@ -366,13 +440,12 @@
             updateJobdeskSelect();
         }
 
-        // ================= ACTIVITY LOGIC =================
+        // ================= ACTIVITY LOGIC (FIREBASE) =================
         const formActivity = document.getElementById('form-activity');
         const photoGroup = document.getElementById('photo-upload-group');
         const photoInput = document.getElementById('act-photo');
         const btnSubmitActivity = document.getElementById('btn-submit-activity');
 
-        // Tampilkan/Sembunyikan upload foto berdasarkan radio status
         document.querySelectorAll('input[name="act-status"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 if (e.target.value === 'Selesai' || e.target.value === 'Sedang Proses') {
@@ -395,19 +468,20 @@
 
         formActivity.addEventListener('submit', async function(e) {
             e.preventDefault();
+            if (!currentUser) return showToast("Menunggu koneksi database...", "warning");
+
             const date = document.getElementById('act-date').value;
             const jobdeskId = document.getElementById('act-jobdesk').value;
             const task = document.getElementById('act-task').value.trim();
             const status = document.querySelector('input[name="act-status"]:checked').value;
             const jdData = jobdesks.find(j => j.id === jobdeskId);
             
-            // Format caption
             const captionHeader = status === 'Selesai' ? '✅ *TUGAS SELESAI*' : '⏳ *TUGAS SEDANG DIPROSES*';
             const caption = `${captionHeader}\n\n📋 *Jobdesk:* ${jdData ? jdData.title : 'Umum'}\n📝 *Aktivitas:* ${task}\n📅 *Tanggal:* ${date}`;
 
             if (status === 'Selesai' || status === 'Sedang Proses') {
                 const file = photoInput.files[0];
-                if (!file) return showToast('Pilih foto bukti terlebih dahulu!', 'warning');
+                if (!file) return showToast('Pilih foto/video bukti terlebih dahulu!', 'warning');
                 
                 btnSubmitActivity.disabled = true;
                 btnSubmitActivity.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim...';
@@ -424,71 +498,75 @@
                 }
             }
 
-            // Simpan ke array
-            const newActivity = {
-                id: Date.now().toString(),
-                date: date,
-                jobdeskId: jobdeskId,
-                jobdeskTitle: jdData ? jdData.title : 'Jobdesk Terhapus',
-                task: task,
-                status: status
-            };
-            activities.unshift(newActivity);
-            renderActivities();
-            
-            // Reset form UI
-            document.getElementById('act-task').value = ''; 
-            photoInput.value = '';
-            btnSubmitActivity.disabled = false;
-            btnSubmitActivity.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Catat Aktivitas';
-            lucide.createIcons();
-            
-            if(status === 'Belum Selesai') showToast('Aktivitas berhasil dicatat!', 'success');
+            try {
+                const actRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
+                await addDoc(actRef, {
+                    date: date,
+                    jobdeskId: jobdeskId,
+                    jobdeskTitle: jdData ? jdData.title : 'Jobdesk Terhapus',
+                    task: task,
+                    status: status,
+                    createdAt: Date.now()
+                });
+                
+                document.getElementById('act-task').value = ''; 
+                photoInput.value = '';
+                if(status === 'Belum Selesai') showToast('Aktivitas berhasil dicatat!', 'success');
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btnSubmitActivity.disabled = false;
+                btnSubmitActivity.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Catat Aktivitas';
+                lucide.createIcons();
+            }
         });
 
-        function deleteActivity(id) {
-            activities = activities.filter(act => act.id !== id);
-            renderActivities();
-            showToast('Aktivitas dihapus.', 'info');
-        }
+        window.deleteActivity = async function(id) {
+            if (!currentUser) return;
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activities', id));
+                showToast('Aktivitas dihapus.', 'info');
+            } catch (error) {
+                showToast('Gagal menghapus aktivitas', 'error');
+            }
+        };
 
-        // ================= MODAL TELEGRAM (KLIK BADGE TABEL) =================
-        function toggleActivityStatus(id) {
+        // ================= MODAL TELEGRAM =================
+        window.toggleActivityStatus = function(id) {
             const act = activities.find(a => a.id === id);
             if(act) {
                 if(act.status === 'Belum Selesai') {
-                    // Minta bukti foto sebelum jadi "Sedang Proses"
                     openTelegramModal(act, 'Sedang Proses');
                 } else if(act.status === 'Sedang Proses') {
-                    // Minta bukti foto sebelum jadi "Selesai"
                     openTelegramModal(act, 'Selesai');
                 } else {
-                    // Dari Selesai -> Belum Selesai (Tidak perlu foto)
-                    act.status = 'Belum Selesai';
-                    renderActivities();
+                    // Update Firebase langsung jika kembali ke Belum Selesai (tanpa foto)
+                    if(!currentUser) return;
+                    updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activities', id), {
+                        status: 'Belum Selesai'
+                    }).catch(err => showToast(err.message, 'error'));
                 }
             }
-        }
+        };
 
         function openTelegramModal(activity, targetStatus) {
             pendingActivityIdForTelegram = activity.id;
             targetStatusForModal = targetStatus;
             
-            document.getElementById('modal-status-text').innerHTML = `Anda menandai aktivitas ini sebagai <strong>"${targetStatus}"</strong>. Silakan unggah foto bukti untuk dikirimkan ke Telegram.`;
+            document.getElementById('modal-status-text').innerHTML = `Anda menandai aktivitas ini sebagai <strong>"${targetStatus}"</strong>. Silakan unggah foto/video bukti untuk dikirimkan ke Telegram.`;
             document.getElementById('modal-task-name').textContent = activity.task;
             
             const modal = document.getElementById('modal-telegram');
             const content = document.getElementById('modal-telegram-content');
             
             modal.classList.remove('hidden');
-            // Sedikit delay untuk animasi tailwind
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 content.classList.remove('scale-95');
             }, 10);
         }
 
-        function closeTelegramModal() {
+        window.closeTelegramModal = function() {
             const modal = document.getElementById('modal-telegram');
             const content = document.getElementById('modal-telegram-content');
             
@@ -500,17 +578,16 @@
                 document.getElementById('modal-photo').value = '';
                 pendingActivityIdForTelegram = null;
             }, 300);
-        }
+        };
 
-        async function submitTelegramModal() {
+        window.submitTelegramModal = async function() {
+            if (!currentUser) return showToast("Menunggu koneksi database...", "warning");
+            
             const fileInput = document.getElementById('modal-photo');
             const file = fileInput.files[0];
             const btnSubmit = document.getElementById('btn-modal-submit');
 
-            if (!file) {
-                showToast('Harap pilih foto bukti terlebih dahulu!', 'warning');
-                return;
-            }
+            if (!file) return showToast('Harap pilih foto/video bukti terlebih dahulu!', 'warning');
 
             const act = activities.find(a => a.id === pendingActivityIdForTelegram);
             if (!act) return;
@@ -525,11 +602,13 @@
             try {
                 await sendToTelegram(file, caption);
                 
-                // Ubah status dan render ulang
-                act.status = targetStatusForModal;
-                renderActivities();
+                // Update ke Firestore
+                await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activities', act.id), {
+                    status: targetStatusForModal
+                });
+                
                 showToast(`Bukti berhasil dikirim dan aktivitas ditandai "${targetStatusForModal}"!`, 'success');
-                closeTelegramModal();
+                window.closeTelegramModal();
             } catch (err) {
                 showToast(err.message, 'error');
             } finally {
@@ -537,7 +616,7 @@
                 btnSubmit.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> Kirim & Selesaikan';
                 lucide.createIcons();
             }
-        }
+        };
 
         function renderActivities() {
             const tbody = document.getElementById('list-activity');
@@ -600,9 +679,6 @@
                 setTimeout(() => { toast.remove(); }, 500);
             }, 3500);
         }
-
-        // Render awal kosong
-        renderJobdesks();
     </script>
 </body>
 </html>
