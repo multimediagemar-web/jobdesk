@@ -233,25 +233,25 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ========================================================
-        // 1. MASUKKAN CONFIG FIREBASE ANDA DI SINI
+        // 1. PENGATURAN FIREBASE (MENDUKUNG CANVAS & CUSTOM)
         // ========================================================
-        const firebaseConfig = {
-            apiKey: "API_KEY_ANDA",
-            authDomain: "PROJECT_ID.firebaseapp.com",
-            projectId: "PROJECT_ID",
-            storageBucket: "PROJECT_ID.firebasestorage.app",
-            messagingSenderId: "SENDER_ID",
-            appId: "APP_ID"
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyDx5dJBs-2YQkTEyEQ7kG_iDC_3zLyv8_E",
+            authDomain: "jobdesk-e611b.firebaseapp.com",
+            projectId: "jobdesk-e611b",
+            storageBucket: "jobdesk-e611b.firebasestorage.app",
+            messagingSenderId: "1049444292185",
+            appId: "1:1049444292185:web:4143449d5eef8c0910c348"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = 'worklog-app'; // ID aplikasi untuk path database
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'worklog-app'; // ID aplikasi untuk path database
         let currentUser = null;
 
         // State Management
@@ -273,18 +273,29 @@
         document.getElementById('tg-chatid').value = localStorage.getItem('tg_chatid');
 
         // ================= AUTHENTICATION FIREBASE =================
-        signInAnonymously(auth).catch(err => {
-            console.error("Firebase Auth Error:", err);
-            showToast("Gagal terhubung ke database. Pastikan Anonymous Auth diaktifkan di Firebase.", "error");
-        });
-
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                currentUser = user;
-                setupRealtimeListeners();
-            } else {
-                currentUser = null;
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    // Gunakan token custom jika ada (untuk lingkungan Canvas)
+                    await signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Firebase Auth Error:", err);
+                showToast("Gagal terhubung ke database. Pastikan pengaturan Auth benar.", "error");
             }
+        };
+
+        initAuth().then(() => {
+            onAuthStateChanged(auth, user => {
+                if (user) {
+                    currentUser = user;
+                    setupRealtimeListeners();
+                } else {
+                    currentUser = null;
+                }
+            });
         });
 
         // ================= LISTENER FIREBASE REALTIME =================
