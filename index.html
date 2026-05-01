@@ -33,9 +33,10 @@
                     <i data-lucide="briefcase" class="w-6 h-6"></i>
                     <span class="font-bold text-xl tracking-tight">WorkLog</span>
                 </div>
-                <div class="flex space-x-2 sm:space-x-4 overflow-x-auto">
+                <div class="flex space-x-2 sm:space-x-4 overflow-x-auto scrollbar-hide">
                     <button onclick="switchTab('jobdesk')" id="nav-jobdesk" class="px-3 py-2 rounded-md text-sm font-medium bg-indigo-700 transition-colors whitespace-nowrap">Jobdesk</button>
                     <button onclick="switchTab('activity')" id="nav-activity" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 transition-colors whitespace-nowrap">Aktivitas Harian</button>
+                    <button onclick="switchTab('calendar')" id="nav-calendar" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 transition-colors whitespace-nowrap">Kalender</button>
                     <button onclick="switchTab('settings')" id="nav-settings" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 transition-colors whitespace-nowrap flex items-center gap-1">
                         <i data-lucide="settings" class="w-4 h-4"></i> Pengaturan
                     </button>
@@ -84,15 +85,39 @@
         <div id="tab-activity" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                 <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-emerald-600">
-                    <i data-lucide="calendar-check" class="w-5 h-5"></i> Catat Aktivitas Harian
+                    <i data-lucide="calendar-check" class="w-5 h-5"></i> Catat Aktivitas Harian / Rutin
                 </h2>
                 <form id="form-activity" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal</label>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Mulai Tanggal</label>
                             <input type="date" id="act-date" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Frekuensi Aktivitas</label>
+                            <select id="act-freq" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white">
+                                <option value="sekali">Sekali Saja</option>
+                                <option value="harian">Harian (Setiap Hari)</option>
+                                <option value="mingguan">Mingguan (Pilih Hari)</option>
+                                <option value="bulanan">Bulanan (Tanggal Sama Tiap Bulan)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Pilihan Hari Khusus Mingguan -->
+                        <div id="freq-mingguan-options" class="hidden col-span-full p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                            <label class="block text-sm font-medium text-emerald-800 mb-2">Pilih Hari Rutin (Mingguan)</label>
+                            <div class="flex flex-wrap gap-4">
+                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="1" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Sen</label>
+                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="2" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Sel</label>
+                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="3" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Rab</label>
+                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="4" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Kam</label>
+                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="5" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Jum</label>
+                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="6" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Sab</label>
+                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="0" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Min</label>
+                            </div>
+                        </div>
+
+                        <div class="col-span-full">
                             <label class="block text-sm font-medium text-slate-700 mb-1">Terkait Jobdesk</label>
                             <select id="act-jobdesk" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white">
                                 <option value="" disabled selected>Pilih Jobdesk...</option>
@@ -103,8 +128,9 @@
                         <label class="block text-sm font-medium text-slate-700 mb-1">Aktivitas / Tugas yang Dikerjakan</label>
                         <input type="text" id="act-task" required placeholder="Contoh: Membuat konten desain untuk Instagram" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Status Penyelesaian</label>
+                    
+                    <div id="status-group">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Status Penyelesaian (Hanya untuk opsi "Sekali Saja")</label>
                         <div class="flex gap-4 mt-2">
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="radio" name="act-status" value="Belum Selesai" class="text-emerald-600 focus:ring-emerald-500" checked>
@@ -121,7 +147,7 @@
                         </div>
                     </div>
                     
-                    <!-- Form Upload File (Hanya muncul jika status "Selesai") -->
+                    <!-- Form Upload File -->
                     <div id="photo-upload-group" class="hidden p-4 bg-slate-50 border border-slate-200 rounded-lg">
                         <label class="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
                             <i data-lucide="file-up" class="w-4 h-4 text-emerald-600"></i> Upload Bukti (Otomatis ke Telegram)
@@ -130,16 +156,21 @@
                         <p class="text-xs text-slate-500 mt-2">Foto/Video wajib diunggah karena status ditandai "Sedang Proses" atau "Selesai" (Maks 50MB).</p>
                     </div>
 
+                    <div id="rutin-notice" class="hidden p-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg flex gap-2">
+                        <i data-lucide="info" class="w-5 h-5 flex-shrink-0"></i>
+                        <span>Aktivitas rutin akan dijadwalkan secara otomatis ke dalam Kalender dengan status awal "Belum Selesai". Anda dapat mengubah statusnya per tanggal di kalender.</span>
+                    </div>
+
                     <div class="flex justify-end pt-2">
                         <button type="submit" id="btn-submit-activity" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i data-lucide="check-circle" class="w-4 h-4"></i> Catat Aktivitas
+                            <i data-lucide="check-circle" class="w-4 h-4"></i> Jadwalkan Aktivitas
                         </button>
                     </div>
                 </form>
             </div>
 
             <div>
-                <h3 class="text-lg font-semibold mb-3 text-slate-700">Riwayat Aktivitas</h3>
+                <h3 class="text-lg font-semibold mb-3 text-slate-700">Riwayat Semua Aktivitas</h3>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
@@ -159,6 +190,55 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB KALENDER ================= -->
+        <div id="tab-calendar" class="space-y-6 hidden">
+            <!-- Kalender Grid -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-indigo-700 flex items-center gap-2">
+                        <i data-lucide="calendar-days" class="w-5 h-5"></i> Kalender Aktivitas
+                    </h2>
+                    <div class="flex items-center gap-4 bg-slate-50 rounded-lg p-1 border border-slate-200">
+                        <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-200 rounded-md transition-colors"><i data-lucide="chevron-left" class="w-4 h-4 text-slate-600"></i></button>
+                        <span id="calendar-month-year" class="font-semibold text-slate-700 w-32 text-center text-sm">Bulan Tahun</span>
+                        <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-200 rounded-md transition-colors"><i data-lucide="chevron-right" class="w-4 h-4 text-slate-600"></i></button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                    <div class="text-xs font-semibold text-rose-500 py-2">Min</div>
+                    <div class="text-xs font-semibold text-slate-500 py-2">Sen</div>
+                    <div class="text-xs font-semibold text-slate-500 py-2">Sel</div>
+                    <div class="text-xs font-semibold text-slate-500 py-2">Rab</div>
+                    <div class="text-xs font-semibold text-slate-500 py-2">Kam</div>
+                    <div class="text-xs font-semibold text-slate-500 py-2">Jum</div>
+                    <div class="text-xs font-semibold text-slate-500 py-2">Sab</div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1 md:gap-2">
+                    <!-- Hari kalender akan di-inject via JS -->
+                </div>
+                <div class="mt-4 flex gap-4 justify-end text-xs text-slate-500">
+                    <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-emerald-500"></div> Semua Selesai</div>
+                    <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-amber-500"></div> Ada Belum Selesai</div>
+                </div>
+            </div>
+
+            <!-- Detail Aktivitas Tanggal Terpilih -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h3 class="text-lg font-semibold mb-4 text-slate-700 flex items-center gap-2 border-b border-slate-100 pb-3">
+                    <i data-lucide="list-todo" class="w-5 h-5 text-indigo-500"></i> 
+                    Aktivitas pada: <span id="calendar-selected-date-text" class="text-indigo-600 font-bold ml-1">Pilih Tanggal</span>
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <tbody id="list-calendar-activity" class="divide-y divide-slate-100 text-sm">
+                            <tr><td colspan="3" class="p-8 text-center text-slate-500 bg-slate-50 rounded-lg">Pilih tanggal di kalender untuk melihat daftar aktivitas.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -202,7 +282,7 @@
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300" id="modal-telegram-content">
             <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
                 <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-                    <i data-lucide="send" class="w-5 h-5 text-blue-500"></i> Kirim Laporan Selesai
+                    <i data-lucide="send" class="w-5 h-5 text-blue-500"></i> Kirim Laporan
                 </h3>
                 <button onclick="closeTelegramModal()" class="text-slate-400 hover:text-slate-600">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -222,7 +302,7 @@
             <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
                 <button onclick="closeTelegramModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">Batal</button>
                 <button onclick="submitTelegramModal()" id="btn-modal-submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2">
-                    <i data-lucide="send" class="w-4 h-4"></i> Kirim & Selesaikan
+                    <i data-lucide="send" class="w-4 h-4"></i> Kirim & Simpan
                 </button>
             </div>
         </div>
@@ -234,7 +314,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, deleteDoc, updateDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ========================================================
         // 1. PENGATURAN FIREBASE (MENDUKUNG CANVAS & CUSTOM)
@@ -251,7 +331,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'worklog-app'; // ID aplikasi untuk path database
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'worklog-app'; 
         let currentUser = null;
 
         // State Management
@@ -260,9 +340,22 @@
         let pendingActivityIdForTelegram = null;
         let targetStatusForModal = null;
 
+        // State Kalender
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        
+        function getLocalYYYYMMDD(date) {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        let selectedDateForCalendar = getLocalYYYYMMDD(new Date());
+
         // Inisialisasi ikon Lucide
         lucide.createIcons();
-        document.getElementById('act-date').valueAsDate = new Date();
+        document.getElementById('act-date').value = selectedDateForCalendar;
 
         // Setup Nilai Default Telegram
         const defaultBotToken = '8614464949:AAGt0GmOes7efeB7HqugsLjQNe9TBVwt6bI';
@@ -276,7 +369,6 @@
         const initAuth = async () => {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    // Gunakan token custom jika ada (untuk lingkungan Canvas)
                     await signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
                 } else {
                     await signInAnonymously(auth);
@@ -302,23 +394,25 @@
         function setupRealtimeListeners() {
             if (!currentUser) return;
 
-            // Load Jobdesks
-            const jdRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks');
+            // MENGGUNAKAN PATH "PUBLIC" (Semua device akan melihat data yang sama)
+            const jdRef = collection(db, 'artifacts', appId, 'public', 'data', 'jobdesks');
             onSnapshot(jdRef, (snapshot) => {
                 jobdesks = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                jobdesks.sort((a, b) => b.createdAt - a.createdAt); // Urutkan terbaru di atas
+                jobdesks.sort((a, b) => b.createdAt - a.createdAt); 
                 renderJobdesks();
             }, (error) => {
                 console.error(error);
                 showToast("Gagal memuat data Jobdesk.", "error");
             });
 
-            // Load Activities
-            const actRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
+            // MENGGUNAKAN PATH "PUBLIC"
+            const actRef = collection(db, 'artifacts', appId, 'public', 'data', 'activities');
             onSnapshot(actRef, (snapshot) => {
                 activities = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                activities.sort((a, b) => b.createdAt - a.createdAt); // Urutkan terbaru di atas
+                // Sort Descending by Date String
+                activities.sort((a, b) => new Date(b.date) - new Date(a.date)); 
                 renderActivities();
+                renderCalendar(); 
             }, (error) => {
                 console.error(error);
                 showToast("Gagal memuat data Aktivitas.", "error");
@@ -327,20 +421,21 @@
 
         // ================= NAVIGASI TAB =================
         window.switchTab = function(tabId) {
-            ['jobdesk', 'activity', 'settings'].forEach(id => {
+            ['jobdesk', 'activity', 'calendar', 'settings'].forEach(id => {
                 document.getElementById(`tab-${id}`).classList.add('hidden');
                 const nav = document.getElementById(`nav-${id}`);
                 nav.classList.remove('bg-indigo-700');
                 nav.classList.add('hover:bg-indigo-500');
             });
 
-            if (tabId === 'activity') {
-                if (jobdesks.length === 0 && activities.length === 0) {
+            if (tabId === 'activity' || tabId === 'calendar') {
+                if (jobdesks.length === 0 && activities.length === 0 && tabId === 'activity') {
                     showToast('Harap tambahkan minimal 1 Jobdesk terlebih dahulu.', 'warning');
                     window.switchTab('jobdesk');
                     return;
                 }
                 updateJobdeskSelect();
+                if(tabId === 'calendar') renderCalendar();
             }
 
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
@@ -348,6 +443,110 @@
             activeNav.classList.add('bg-indigo-700');
             activeNav.classList.remove('hover:bg-indigo-500');
         };
+
+        // ================= KALENDER LOGIC =================
+        window.changeMonth = function(offset) {
+            currentMonth += offset;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        };
+
+        window.selectCalendarDate = function(dateStr) {
+            selectedDateForCalendar = dateStr;
+            renderCalendar();
+        };
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            const monthYearLabel = document.getElementById('calendar-month-year');
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            
+            monthYearLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            let html = '';
+
+            for (let i = 0; i < firstDay; i++) {
+                html += `<div class="p-2 bg-slate-50/50 rounded-lg border border-transparent"></div>`;
+            }
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const dayActivities = activities.filter(a => a.date === dateStr);
+                const isSelected = dateStr === selectedDateForCalendar;
+                const isToday = dateStr === getLocalYYYYMMDD(new Date());
+                
+                let bgClass = 'bg-white hover:bg-indigo-50 border border-slate-100 cursor-pointer shadow-sm';
+                let textClass = 'text-slate-700';
+                
+                if (isSelected) {
+                    bgClass = 'bg-indigo-600 border-indigo-700 shadow-md transform scale-105 transition-transform z-10';
+                    textClass = 'text-white font-bold';
+                } else if (isToday) {
+                    bgClass = 'bg-indigo-50 border-indigo-300';
+                    textClass = 'text-indigo-800 font-bold';
+                }
+
+                let indicator = '<div class="w-2 h-2 mt-1"></div>'; 
+                if (dayActivities.length > 0) {
+                    const completed = dayActivities.filter(a => a.status === 'Selesai').length;
+                    const all = dayActivities.length;
+                    const colorClass = completed === all ? 'bg-emerald-500' : 'bg-amber-500';
+                    indicator = `<div class="w-2 h-2 rounded-full ${colorClass} mx-auto mt-1 shadow-sm"></div>`;
+                }
+
+                html += `
+                    <div onclick="selectCalendarDate('${dateStr}')" class="p-2 md:p-3 rounded-lg flex flex-col items-center justify-center transition-all ${bgClass}">
+                        <span class="${textClass} text-sm md:text-base">${i}</span>
+                        ${indicator}
+                    </div>
+                `;
+            }
+            grid.innerHTML = html;
+            renderCalendarActivities();
+        }
+
+        function renderCalendarActivities() {
+            const tbody = document.getElementById('list-calendar-activity');
+            const dateLabel = document.getElementById('calendar-selected-date-text');
+            
+            if (!selectedDateForCalendar) return;
+
+            const dateObj = new Date(selectedDateForCalendar);
+            dateLabel.textContent = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+            const dayActivities = activities.filter(a => a.date === selectedDateForCalendar);
+
+            if (dayActivities.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">Tidak ada aktivitas pada tanggal ini.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = dayActivities.map(act => {
+                let statusBadge = '';
+                if (act.status === 'Selesai') {
+                    statusBadge = `<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold cursor-pointer" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
+                } else if (act.status === 'Sedang Proses') {
+                    statusBadge = `<span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold cursor-pointer" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
+                } else {
+                    statusBadge = `<span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold cursor-pointer" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-4 align-top font-medium text-indigo-700 md:w-1/4">${act.jobdeskTitle}</td>
+                        <td class="p-4 align-top text-slate-800">${act.task}</td>
+                        <td class="p-4 align-top whitespace-nowrap text-right md:w-1/6">${statusBadge}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
 
         // ================= FUNGSI TELEGRAM API =================
         async function sendToTelegram(file, caption) {
@@ -402,7 +601,7 @@
             if (title && desc) {
                 btnSubmit.disabled = true;
                 try {
-                    const jdRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks');
+                    const jdRef = collection(db, 'artifacts', appId, 'public', 'data', 'jobdesks');
                     await addDoc(jdRef, { title, desc, createdAt: Date.now() });
                     formJobdesk.reset();
                     showToast('Jobdesk berhasil ditambahkan!', 'success');
@@ -420,7 +619,7 @@
             if (isUsed) return showToast('Gagal: Jobdesk ini sedang digunakan pada riwayat aktivitas.', 'error');
             
             try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks', id));
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jobdesks', id));
                 showToast('Jobdesk dihapus.', 'info');
             } catch (error) {
                 showToast('Gagal menghapus jobdesk', 'error');
@@ -457,8 +656,41 @@
         const photoInput = document.getElementById('act-photo');
         const btnSubmitActivity = document.getElementById('btn-submit-activity');
 
+        // Toggle Frequency Options
+        document.getElementById('act-freq').addEventListener('change', function(e) {
+            const val = e.target.value;
+            const weeklyGroup = document.getElementById('freq-mingguan-options');
+            const statusGroup = document.getElementById('status-group');
+            const rutinNotice = document.getElementById('rutin-notice');
+            
+            if(val === 'mingguan') {
+                weeklyGroup.classList.remove('hidden');
+            } else {
+                weeklyGroup.classList.add('hidden');
+            }
+
+            if(val !== 'sekali') {
+                statusGroup.classList.add('hidden');
+                photoGroup.classList.add('hidden');
+                rutinNotice.classList.remove('hidden');
+                photoInput.required = false;
+                document.querySelector('input[name="act-status"][value="Belum Selesai"]').checked = true;
+            } else {
+                statusGroup.classList.remove('hidden');
+                rutinNotice.classList.add('hidden');
+                const checkedStatus = document.querySelector('input[name="act-status"]:checked').value;
+                if(checkedStatus !== 'Belum Selesai') {
+                    photoGroup.classList.remove('hidden');
+                    photoInput.required = true;
+                }
+            }
+        });
+
+        // Toggle Status & Photo Upload for "Sekali Saja"
         document.querySelectorAll('input[name="act-status"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
+                if(document.getElementById('act-freq').value !== 'sekali') return;
+
                 if (e.target.value === 'Selesai' || e.target.value === 'Sedang Proses') {
                     photoGroup.classList.remove('hidden');
                     photoInput.required = true;
@@ -482,18 +714,31 @@
             if (!currentUser) return showToast("Menunggu koneksi database...", "warning");
 
             const date = document.getElementById('act-date').value;
+            const freq = document.getElementById('act-freq').value;
             const jobdeskId = document.getElementById('act-jobdesk').value;
             const task = document.getElementById('act-task').value.trim();
-            const status = document.querySelector('input[name="act-status"]:checked').value;
             const jdData = jobdesks.find(j => j.id === jobdeskId);
             
-            const captionHeader = status === 'Selesai' ? '✅ *TUGAS SELESAI*' : '⏳ *TUGAS SEDANG DIPROSES*';
-            const caption = `${captionHeader}\n\n📋 *Jobdesk:* ${jdData ? jdData.title : 'Umum'}\n📝 *Aktivitas:* ${task}\n📅 *Tanggal:* ${date}`;
+            let status = document.querySelector('input[name="act-status"]:checked').value;
+            if(freq !== 'sekali') status = 'Belum Selesai'; // Force Belum Selesai for Routine tasks
 
-            if (status === 'Selesai' || status === 'Sedang Proses') {
+            // Validate Mingguan
+            let selectedDays = [];
+            if(freq === 'mingguan') {
+                selectedDays = Array.from(document.querySelectorAll('input[name="act-days"]:checked')).map(el => parseInt(el.value));
+                if(selectedDays.length === 0) {
+                    return showToast('Harap pilih minimal 1 hari untuk jadwal mingguan!', 'warning');
+                }
+            }
+
+            // --- Telegram Upload Handling (Only if "Sekali" & status changed) ---
+            if (freq === 'sekali' && (status === 'Selesai' || status === 'Sedang Proses')) {
                 const file = photoInput.files[0];
                 if (!file) return showToast('Pilih foto/video bukti terlebih dahulu!', 'warning');
                 
+                const captionHeader = status === 'Selesai' ? '✅ *TUGAS SELESAI*' : '⏳ *TUGAS SEDANG DIPROSES*';
+                const caption = `${captionHeader}\n\n📋 *Jobdesk:* ${jdData ? jdData.title : 'Umum'}\n📝 *Aktivitas:* ${task}\n📅 *Tanggal:* ${date}`;
+
                 btnSubmitActivity.disabled = true;
                 btnSubmitActivity.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim...';
                 lucide.createIcons();
@@ -503,31 +748,81 @@
                     showToast('Bukti berhasil dikirim ke Telegram!', 'success');
                 } catch (err) {
                     btnSubmitActivity.disabled = false;
-                    btnSubmitActivity.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Catat Aktivitas';
+                    btnSubmitActivity.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Jadwalkan Aktivitas';
                     lucide.createIcons();
                     return showToast(err.message, 'error');
                 }
             }
 
+            // --- Generate Schedule Dates ---
+            const [sYear, sMonth, sDay] = date.split('-').map(Number);
+            const startDate = new Date(sYear, sMonth - 1, sDay);
+            const endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + 6); // Generate occurrences for the next 6 months
+            
+            let datesToCreate = [];
+
+            if (freq === 'sekali') {
+                datesToCreate.push(date);
+            } else {
+                let curr = new Date(startDate);
+                while(curr <= endDate) {
+                    const yyyy = curr.getFullYear();
+                    const mm = String(curr.getMonth() + 1).padStart(2, '0');
+                    const dd = String(curr.getDate()).padStart(2, '0');
+                    const dateStr = `${yyyy}-${mm}-${dd}`;
+
+                    if (freq === 'harian') {
+                        datesToCreate.push(dateStr);
+                    } else if (freq === 'mingguan') {
+                        if (selectedDays.includes(curr.getDay())) {
+                            datesToCreate.push(dateStr);
+                        }
+                    } else if (freq === 'bulanan') {
+                        if (curr.getDate() === startDate.getDate()) {
+                            datesToCreate.push(dateStr);
+                        }
+                    }
+                    curr.setDate(curr.getDate() + 1);
+                }
+            }
+
+            btnSubmitActivity.disabled = true;
+            btnSubmitActivity.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Menyimpan...';
+            lucide.createIcons();
+
             try {
-                const actRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
-                await addDoc(actRef, {
-                    date: date,
-                    jobdeskId: jobdeskId,
-                    jobdeskTitle: jdData ? jdData.title : 'Jobdesk Terhapus',
-                    task: task,
-                    status: status,
-                    createdAt: Date.now()
+                // Batch Write (Max 500 per batch, 6 months daily = ~180 writes)
+                const batch = writeBatch(db);
+                const actColRef = collection(db, 'artifacts', appId, 'public', 'data', 'activities');
+                
+                datesToCreate.forEach(dStr => {
+                    const newDocRef = doc(actColRef);
+                    batch.set(newDocRef, {
+                        date: dStr,
+                        jobdeskId: jobdeskId,
+                        jobdeskTitle: jdData ? jdData.title : 'Jobdesk Terhapus',
+                        task: task,
+                        status: status,
+                        createdAt: Date.now()
+                    });
                 });
+
+                await batch.commit();
                 
                 document.getElementById('act-task').value = ''; 
                 photoInput.value = '';
-                if(status === 'Belum Selesai') showToast('Aktivitas berhasil dicatat!', 'success');
+                
+                if(freq === 'sekali') {
+                    if(status === 'Belum Selesai') showToast('Aktivitas berhasil dicatat!', 'success');
+                } else {
+                    showToast('Jadwal rutin berhasil ditambahkan ke kalender!', 'success');
+                }
             } catch (err) {
                 showToast(err.message, 'error');
             } finally {
                 btnSubmitActivity.disabled = false;
-                btnSubmitActivity.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Catat Aktivitas';
+                btnSubmitActivity.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Jadwalkan Aktivitas';
                 lucide.createIcons();
             }
         });
@@ -535,7 +830,7 @@
         window.deleteActivity = async function(id) {
             if (!currentUser) return;
             try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activities', id));
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', id));
                 showToast('Aktivitas dihapus.', 'info');
             } catch (error) {
                 showToast('Gagal menghapus aktivitas', 'error');
@@ -551,9 +846,8 @@
                 } else if(act.status === 'Sedang Proses') {
                     openTelegramModal(act, 'Selesai');
                 } else {
-                    // Update Firebase langsung jika kembali ke Belum Selesai (tanpa foto)
                     if(!currentUser) return;
-                    updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activities', id), {
+                    updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', id), {
                         status: 'Belum Selesai'
                     }).catch(err => showToast(err.message, 'error'));
                 }
@@ -613,8 +907,7 @@
             try {
                 await sendToTelegram(file, caption);
                 
-                // Update ke Firestore
-                await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activities', act.id), {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', act.id), {
                     status: targetStatusForModal
                 });
                 
@@ -624,7 +917,7 @@
                 showToast(err.message, 'error');
             } finally {
                 btnSubmit.disabled = false;
-                btnSubmit.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> Kirim & Selesaikan';
+                btnSubmit.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> Kirim & Simpan';
                 lucide.createIcons();
             }
         };
