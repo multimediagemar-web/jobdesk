@@ -294,9 +294,38 @@
                     </div>
                 </form>
             </div>
+
+            <div class="bg-red-50 rounded-xl shadow-sm border border-red-200 p-6 mt-6">
+                <h2 class="text-xl font-semibold mb-2 flex items-center gap-2 text-red-700">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i> Zona Berbahaya
+                </h2>
+                <p class="text-sm text-red-600 mb-4">Menghapus semua data (Jobdesk dan Aktivitas) secara permanen. Tindakan ini tidak dapat dibatalkan.</p>
+                <button onclick="confirmDeleteAll()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Semua Data
+                </button>
+            </div>
         </div>
 
     </main>
+
+    <!-- Modal Konfirmasi Hapus -->
+    <div id="modal-confirm" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300" id="modal-confirm-content">
+            <div class="p-5 border-b border-slate-200 flex items-center gap-3 bg-red-50 text-red-700">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                <h3 class="font-bold text-lg">Konfirmasi Hapus</h3>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-slate-600" id="modal-confirm-message">Apakah Anda yakin ingin menghapus data ini?</p>
+            </div>
+            <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">Batal</button>
+                <button onclick="executeDelete()" id="btn-confirm-delete" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal Upload Telegram (Saat klik ubah status di tabel) -->
     <div id="modal-telegram" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
@@ -552,7 +581,7 @@
             tbody.innerHTML = dayActivities.map(act => {
                 let statusBadge = '';
                 if (act.status === 'Selesai') {
-                    statusBadge = `<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold cursor-pointer" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
+                    statusBadge = `<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-not-allowed" title="Tugas selesai dan tidak dapat diubah"><i data-lucide="lock" class="w-3 h-3"></i> ${act.status}</span>`;
                 } else if (act.status === 'Sedang Proses') {
                     statusBadge = `<span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold cursor-pointer" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
                 } else {
@@ -647,6 +676,12 @@
             }
         };
 
+        window.confirmDeleteJobdesk = function(id) {
+            const isUsed = activities.some(act => act.jobdeskId === id);
+            if (isUsed) return showToast('Gagal: Jobdesk ini sedang digunakan pada riwayat aktivitas.', 'error');
+            openConfirmModal('jobdesk', id, 'Apakah Anda yakin ingin menghapus jobdesk ini?');
+        };
+
         function renderJobdesks() {
             const container = document.getElementById('list-jobdesk');
             if (jobdesks.length === 0) {
@@ -661,7 +696,7 @@
                         <p class="text-slate-600 text-sm leading-relaxed">${jd.desc}</p>
                     </div>
                     <div class="mt-4 pt-4 border-t border-slate-100 flex justify-end">
-                        <button onclick="deleteJobdesk('${jd.id}')" class="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-1 transition-colors">
+                        <button onclick="confirmDeleteJobdesk('${jd.id}')" class="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-1 transition-colors">
                             <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus
                         </button>
                     </div>
@@ -878,10 +913,89 @@
             }
         };
 
+        window.confirmDeleteActivity = function(id) {
+            openConfirmModal('activity', id, 'Apakah Anda yakin ingin menghapus aktivitas ini secara permanen?');
+        };
+
+        window.confirmDeleteAll = function() {
+            openConfirmModal('all', null, 'Apakah Anda sangat yakin ingin menghapus SEMUA Jobdesk dan Aktivitas? Tindakan ini akan menghapus semua data secara permanen!');
+        };
+
+        let deleteTargetId = null;
+        let deleteTargetType = null;
+
+        window.openConfirmModal = function(type, id, message) {
+            deleteTargetType = type;
+            deleteTargetId = id;
+            document.getElementById('modal-confirm-message').textContent = message;
+            
+            const modal = document.getElementById('modal-confirm');
+            const content = document.getElementById('modal-confirm-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closeConfirmModal = function() {
+            const modal = document.getElementById('modal-confirm');
+            const content = document.getElementById('modal-confirm-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                deleteTargetId = null;
+                deleteTargetType = null;
+            }, 300);
+        };
+
+        window.executeDelete = async function() {
+            if (!currentUser) return;
+            const btn = document.getElementById('btn-confirm-delete');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Menghapus...';
+            lucide.createIcons();
+
+            try {
+                if (deleteTargetType === 'activity') {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', deleteTargetId));
+                    showToast('Aktivitas berhasil dihapus.', 'info');
+                } else if (deleteTargetType === 'jobdesk') {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jobdesks', deleteTargetId));
+                    showToast('Jobdesk berhasil dihapus.', 'info');
+                } else if (deleteTargetType === 'all') {
+                    const actRef = collection(db, 'artifacts', appId, 'public', 'data', 'activities');
+                    const jdRef = collection(db, 'artifacts', appId, 'public', 'data', 'jobdesks');
+                    
+                    const allDocs = [
+                        ...activities.map(a => doc(actRef, a.id)), 
+                        ...jobdesks.map(j => doc(jdRef, j.id))
+                    ];
+
+                    for (let i = 0; i < allDocs.length; i += 400) {
+                        const chunkBatch = writeBatch(db);
+                        allDocs.slice(i, i + 400).forEach(d => chunkBatch.delete(d));
+                        await chunkBatch.commit();
+                    }
+                    showToast('Semua data berhasil dihapus!', 'success');
+                }
+            } catch (error) {
+                showToast('Gagal menghapus data: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="trash-2" class="w-4 h-4"></i> Hapus';
+                lucide.createIcons();
+                closeConfirmModal();
+            }
+        };
+
         // ================= MODAL TELEGRAM =================
         window.toggleActivityStatus = function(id) {
             const act = activities.find(a => a.id === id);
             if(act) {
+                if(act.status === 'Selesai') return; // Mencegah perubahan jika sudah Selesai
+
                 if(act.status === 'Belum Selesai') {
                     openTelegramModal(act, 'Sedang Proses');
                 } else if(act.status === 'Sedang Proses') {
@@ -985,7 +1099,7 @@
             tbody.innerHTML = filteredActivities.map(act => {
                 let statusBadge = '';
                 if (act.status === 'Selesai') {
-                    statusBadge = `<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold cursor-pointer hover:bg-emerald-200 transition-colors" title="Klik untuk ubah ke Belum Selesai" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
+                    statusBadge = `<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-not-allowed" title="Tugas selesai dan tidak dapat diubah"><i data-lucide="lock" class="w-3 h-3"></i> ${act.status}</span>`;
                 } else if (act.status === 'Sedang Proses') {
                     statusBadge = `<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold cursor-pointer hover:bg-blue-200 transition-colors" title="Klik untuk Selesaikan" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
                 } else {
@@ -1002,7 +1116,7 @@
                         <td class="p-4 align-top text-slate-800">${act.task}</td>
                         <td class="p-4 align-top whitespace-nowrap">${statusBadge}</td>
                         <td class="p-4 align-top text-right whitespace-nowrap">
-                            <button onclick="deleteActivity('${act.id}')" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                            <button onclick="confirmDeleteActivity('${act.id}')" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </td>
