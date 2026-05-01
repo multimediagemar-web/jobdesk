@@ -171,6 +171,27 @@
 
             <div>
                 <h3 class="text-lg font-semibold mb-3 text-slate-700">Riwayat Semua Aktivitas</h3>
+                
+                <!-- Filter Section -->
+                <div class="mb-4 flex flex-col md:flex-row gap-4 items-end bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <div class="flex-1 w-full">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Filter Tanggal</label>
+                        <input type="date" id="filter-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div class="flex-1 w-full">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Filter Jobdesk</label>
+                        <select id="filter-jobdesk" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <option value="all">Semua Jobdesk</option>
+                            <!-- Options injected via JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <button type="button" onclick="resetFilters()" class="w-full md:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="filter-x" class="w-4 h-4"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
@@ -313,13 +334,13 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, deleteDoc, updateDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ========================================================
-        // 1. PENGATURAN FIREBASE (MENDUKUNG CANVAS & CUSTOM)
+        // 1. PENGATURAN FIREBASE (HANYA MENGGUNAKAN FIREBASE ANDA)
         // ========================================================
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+        const firebaseConfig = {
             apiKey: "AIzaSyDx5dJBs-2YQkTEyEQ7kG_iDC_3zLyv8_E",
             authDomain: "jobdesk-e611b.firebaseapp.com",
             projectId: "jobdesk-e611b",
@@ -331,7 +352,9 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'worklog-app'; 
+        
+        // Memaksa ID statik agar semua peranti membaca folder yang sama persis
+        const appId = 'worklog-app'; 
         let currentUser = null;
 
         // State Management
@@ -356,6 +379,7 @@
         // Inisialisasi ikon Lucide
         lucide.createIcons();
         document.getElementById('act-date').value = selectedDateForCalendar;
+        document.getElementById('filter-date').value = selectedDateForCalendar; // Set tampilan default ke hari ini
 
         // Setup Nilai Default Telegram
         const defaultBotToken = '8614464949:AAGt0GmOes7efeB7HqugsLjQNe9TBVwt6bI';
@@ -368,11 +392,8 @@
         // ================= AUTHENTICATION FIREBASE =================
         const initAuth = async () => {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // Hanya menggunakan Anonymous login untuk Firebase peribadi anda
+                await signInAnonymously(auth);
             } catch (err) {
                 console.error("Firebase Auth Error:", err);
                 showToast("Gagal terhubung ke database. Pastikan pengaturan Auth benar.", "error");
@@ -701,12 +722,32 @@
             });
         });
 
+        // Event listeners untuk filter
+        document.getElementById('filter-date').addEventListener('change', () => renderActivities());
+        document.getElementById('filter-jobdesk').addEventListener('change', () => renderActivities());
+
+        window.resetFilters = function() {
+            document.getElementById('filter-date').value = '';
+            document.getElementById('filter-jobdesk').value = 'all';
+            renderActivities();
+        };
+
         function updateJobdeskSelect() {
             const select = document.getElementById('act-jobdesk');
+            const filterSelect = document.getElementById('filter-jobdesk');
+            
             const currentValue = select.value;
-            select.innerHTML = '<option value="" disabled selected>Pilih Jobdesk...</option>' + 
-                jobdesks.map(jd => `<option value="${jd.id}">${jd.title}</option>`).join('');
+            const currentFilterValue = filterSelect ? filterSelect.value : 'all';
+
+            const optionsHTML = jobdesks.map(jd => `<option value="${jd.id}">${jd.title}</option>`).join('');
+            
+            select.innerHTML = '<option value="" disabled selected>Pilih Jobdesk...</option>' + optionsHTML;
             if (jobdesks.some(jd => jd.id === currentValue)) select.value = currentValue;
+
+            if (filterSelect) {
+                filterSelect.innerHTML = '<option value="all">Semua Jobdesk</option>' + optionsHTML;
+                if (jobdesks.some(jd => jd.id === currentFilterValue)) filterSelect.value = currentFilterValue;
+            }
         }
 
         formActivity.addEventListener('submit', async function(e) {
@@ -924,12 +965,24 @@
 
         function renderActivities() {
             const tbody = document.getElementById('list-activity');
-            if (activities.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500">Belum ada aktivitas harian yang dicatat.</td></tr>`;
+            const filterDate = document.getElementById('filter-date') ? document.getElementById('filter-date').value : '';
+            const filterJobdesk = document.getElementById('filter-jobdesk') ? document.getElementById('filter-jobdesk').value : 'all';
+
+            // Apply filters
+            let filteredActivities = activities;
+            if (filterDate) {
+                filteredActivities = filteredActivities.filter(a => a.date === filterDate);
+            }
+            if (filterJobdesk && filterJobdesk !== 'all') {
+                filteredActivities = filteredActivities.filter(a => a.jobdeskId === filterJobdesk);
+            }
+
+            if (filteredActivities.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500">Tidak ada aktivitas yang sesuai dengan filter / belum ada yang dicatat.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = activities.map(act => {
+            tbody.innerHTML = filteredActivities.map(act => {
                 let statusBadge = '';
                 if (act.status === 'Selesai') {
                     statusBadge = `<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold cursor-pointer hover:bg-emerald-200 transition-colors" title="Klik untuk ubah ke Belum Selesai" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
