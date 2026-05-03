@@ -22,6 +22,26 @@
             animation: fadeOut 0.5s ease-out forwards;
         }
     </style>
+    <script>
+        // Mendefinisikan fungsi global awal untuk mencegah ralat ReferenceError saat modul (Firebase) sedang dimuat
+        window.switchTab = function() { console.warn("Modul sedang dimuat, harap tunggu..."); };
+        window.changeMonth = function() {};
+        window.selectCalendarDate = function() {};
+        window.closeTelegramModal = function() {};
+        window.submitTelegramModal = function() {};
+        window.closeActivityDetailModal = function() {};
+        window.openActivityDetailModal = function() {};
+        window.confirmDeleteActivity = function() {};
+        window.confirmDeleteAll = function() {};
+        window.closeConfirmModal = function() {};
+        window.executeDelete = function() {};
+        window.openEditJobdeskModal = function() {};
+        window.confirmDeleteJobdesk = function() {};
+        window.submitEditJobdesk = function() {};
+        window.closeEditJobdeskModal = function() {};
+        window.resetFilters = function() {};
+        window.toggleActivityStatus = function() {};
+    </script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
 
@@ -45,7 +65,7 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
+    <!-- Konten Utama -->
     <main class="flex-grow w-full max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
         
         <!-- ================= TAB JOBDESK ================= -->
@@ -57,7 +77,7 @@
                 <form id="form-jobdesk" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Nama Peran / Jobdesk</label>
-                        <input type="text" id="jd-title" required placeholder="Contoh: Social Media Specialist" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                        <input type="text" id="jd-title" required placeholder="Contoh: Pakar Media Sosial" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Deskripsi Tanggung Jawab</label>
@@ -81,7 +101,7 @@
             </div>
         </div>
 
-        <!-- ================= TAB ACTIVITY ================= -->
+        <!-- ================= TAB AKTIVITAS ================= -->
         <div id="tab-activity" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                 <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-emerald-600">
@@ -99,7 +119,7 @@
                                 <option value="sekali">Sekali Saja</option>
                                 <option value="harian">Harian (Setiap Hari)</option>
                                 <option value="mingguan">Mingguan (Pilih Hari)</option>
-                                <option value="bulanan">Bulanan (Tanggal Sama Tiap Bulan)</option>
+                                <option value="bulanan">Bulanan (Tanggal Sama Setiap Bulan)</option>
                             </select>
                         </div>
                         
@@ -126,11 +146,11 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Aktivitas / Tugas yang Dikerjakan</label>
-                        <input type="text" id="act-task" required placeholder="Contoh: Membuat konten desain untuk Instagram" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+                        <input type="text" id="act-task" required placeholder="Contoh: Membuat desain konten untuk Instagram" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Deskripsi Aktivitas</label>
-                        <textarea id="act-desc" rows="2" placeholder="Jelaskan detail aktivitas ini secara opsional..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"></textarea>
+                        <textarea id="act-desc" rows="2" placeholder="Jelaskan detail aktivitas ini (opsional)..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"></textarea>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Keterangan Bukti Laporan</label>
@@ -155,13 +175,15 @@
                         </div>
                     </div>
                     
-                    <!-- Form Upload File -->
+                    <!-- Form Unggah File -->
                     <div id="photo-upload-group" class="hidden p-4 bg-slate-50 border border-slate-200 rounded-lg">
                         <label class="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
-                            <i data-lucide="file-up" class="w-4 h-4 text-emerald-600"></i> Upload Bukti (Otomatis ke Telegram)
+                            <i data-lucide="file-up" class="w-4 h-4 text-emerald-600"></i> Unggah Bukti (Otomatis ke Telegram)
                         </label>
                         <input type="file" id="act-photo" accept="image/*,video/*" class="w-full mt-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all">
-                        <p class="text-xs text-slate-500 mt-2">Foto/Video wajib diunggah karena status ditandai "Sedang Proses" atau "Selesai" (Maks 50MB).</p>
+                        <p class="text-xs text-slate-500 mt-2">Foto/Video wajib diunggah karena status ditandai "Sedang Proses" atau "Selesai" (Maksimum 50MB).</p>
+                        <!-- Wadah Pratinjau Media -->
+                        <div id="act-media-preview" class="hidden mt-3 rounded-lg overflow-hidden border border-slate-200 bg-black flex justify-center"></div>
                     </div>
 
                     <div id="rutin-notice" class="hidden p-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg flex gap-2">
@@ -180,7 +202,7 @@
             <div>
                 <h3 class="text-lg font-semibold mb-3 text-slate-700">Riwayat Semua Aktivitas</h3>
                 
-                <!-- Filter Section -->
+                <!-- Bagian Filter -->
                 <div class="mb-4 flex flex-col md:flex-row gap-4 items-end bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                     <div class="flex-1 w-full">
                         <label class="block text-xs font-medium text-slate-500 mb-1">Filter Tanggal</label>
@@ -190,7 +212,7 @@
                         <label class="block text-xs font-medium text-slate-500 mb-1">Filter Jobdesk</label>
                         <select id="filter-jobdesk" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                             <option value="all">Semua Jobdesk</option>
-                            <!-- Options injected via JS -->
+                            <!-- Pilihan disuntik via JS -->
                         </select>
                     </div>
                     <div>
@@ -225,7 +247,7 @@
 
         <!-- ================= TAB KALENDER ================= -->
         <div id="tab-calendar" class="space-y-6 hidden">
-            <!-- Kalender Grid -->
+            <!-- Grid Kalender -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-semibold text-indigo-700 flex items-center gap-2">
@@ -248,7 +270,7 @@
                     <div class="text-xs font-semibold text-slate-500 py-2">Sab</div>
                 </div>
                 <div id="calendar-grid" class="grid grid-cols-7 gap-1 md:gap-2">
-                    <!-- Hari kalender akan di-inject via JS -->
+                    <!-- Hari kalender akan disuntik via JS -->
                 </div>
                 <div class="mt-4 flex gap-4 justify-end text-xs text-slate-500">
                     <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-emerald-500"></div> Semua Selesai</div>
@@ -276,19 +298,19 @@
         <div id="tab-settings" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                 <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-slate-800">
-                    <i data-lucide="send" class="w-5 h-5 text-blue-500"></i> Pengaturan Telegram Bot
+                    <i data-lucide="send" class="w-5 h-5 text-blue-500"></i> Pengaturan Bot Telegram
                 </h2>
                 <div class="mb-6 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
                     <p class="mb-2"><strong>Cara Mengatur:</strong></p>
                     <ul class="list-disc pl-5 space-y-1">
-                        <li>Buat bot melalui <strong>@BotFather</strong> di Telegram dan dapatkan <strong>Bot Token</strong>-nya.</li>
-                        <li>Masukkan bot tersebut ke Grup Telegram Anda.</li>
+                        <li>Buat bot melalui <strong>@BotFather</strong> di Telegram dan dapatkan <strong>Token Bot</strong> Anda.</li>
+                        <li>Masukkan bot tersebut ke dalam Grup Telegram Anda.</li>
                         <li>Dapatkan <strong>Chat ID</strong> grup tersebut (biasanya diawali tanda minus, misal: <code class="bg-blue-100 px-1 rounded">-100123456789</code>).</li>
                     </ul>
                 </div>
                 <form id="form-settings" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Telegram Bot Token</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Token Bot Telegram</label>
                         <input type="text" id="tg-token" value="8614464949:AAGt0GmOes7efeB7HqugsLjQNe9TBVwt6bI" placeholder="1234567890:ABCdefGhIJKlmNoPQRsTUVWxyz" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono text-sm">
                     </div>
                     <div>
@@ -361,36 +383,59 @@
         </div>
     </div>
 
-    <!-- Modal Upload Telegram (Saat klik ubah status di tabel) -->
+    <!-- Modal Konfirmasi Unggah Telegram -->
     <div id="modal-telegram" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300" id="modal-telegram-content">
             <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
                 <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-                    <i data-lucide="arrow-right-circle" class="w-5 h-5 text-blue-500"></i> Konfirmasi Ubah Status
+                    <i data-lucide="arrow-right-circle" class="w-5 h-5 text-blue-500"></i> Perbarui Status Aktivitas
                 </h3>
                 <button onclick="closeTelegramModal()" class="text-slate-400 hover:text-slate-600">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
             <div class="p-6">
-                <p class="text-sm text-slate-600 mb-4" id="modal-status-text">Anda akan mengubah status aktivitas ini menjadi <strong>"Selesai"</strong>. Silakan unggah foto/video bukti untuk dikirimkan ke Telegram.</p>
+                <p class="text-sm text-slate-600 mb-4">Silakan pilih status baru untuk aktivitas ini. Bukti foto/video wajib diunggah untuk status "Sedang Proses" atau "Selesai".</p>
                 <div class="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                     <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Aktivitas</p>
                     <p class="text-sm font-medium text-slate-800" id="modal-task-name">-</p>
                 </div>
-                <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p class="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-1">Bukti yang Diminta</p>
-                    <p class="text-sm font-medium text-amber-800" id="modal-req-proof">-</p>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Pilih Status Baru</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="modal-act-status" value="Belum Selesai" class="text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-sm">Belum Selesai</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="modal-act-status" value="Sedang Proses" class="text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm">Sedang Proses</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="modal-act-status" value="Selesai" class="text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-sm">Selesai</span>
+                        </label>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Pilih Foto/Video Bukti</label>
-                    <input type="file" id="modal-photo" accept="image/*,video/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all">
+
+                <div id="modal-upload-section" class="hidden">
+                    <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p class="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-1">Bukti yang Diminta</p>
+                        <p class="text-sm font-medium text-amber-800" id="modal-req-proof">-</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Pilih Foto/Video Bukti</label>
+                        <input type="file" id="modal-photo" accept="image/*,video/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all">
+                        <!-- Wadah Pratinjau Media -->
+                        <div id="modal-media-preview" class="hidden mt-3 rounded-lg overflow-hidden border border-slate-200 bg-black flex justify-center"></div>
+                    </div>
                 </div>
             </div>
             <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
                 <button onclick="closeTelegramModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">Batal</button>
                 <button onclick="submitTelegramModal()" id="btn-modal-submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2">
-                    <i data-lucide="send" class="w-4 h-4"></i> Kirim & Simpan
+                    <i data-lucide="save" class="w-4 h-4"></i> Simpan Perubahan
                 </button>
             </div>
         </div>
@@ -428,7 +473,7 @@
         </div>
     </div>
 
-    <!-- Toast Notification Container -->
+    <!-- Wadah Notifikasi Toast -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
     <script type="module">
@@ -452,15 +497,14 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // Memaksa ID statik agar semua peranti membaca folder yang sama persis
+        // Memaksa ID statik agar semua perangkat membaca folder yang sama persis
         const appId = 'worklog-app'; 
         let currentUser = null;
 
-        // State Management
+        // Manajemen State
         let jobdesks = [];
         let activities = [];
         let pendingActivityIdForTelegram = null;
-        let targetStatusForModal = null;
 
         // State Kalender
         let currentMonth = new Date().getMonth();
@@ -478,7 +522,7 @@
         // Inisialisasi ikon Lucide
         lucide.createIcons();
         document.getElementById('act-date').value = selectedDateForCalendar;
-        document.getElementById('filter-date').value = selectedDateForCalendar; // Set tampilan default ke hari ini
+        document.getElementById('filter-date').value = selectedDateForCalendar; 
 
         // Setup Nilai Default Telegram
         const defaultBotToken = '8614464949:AAGt0GmOes7efeB7HqugsLjQNe9TBVwt6bI';
@@ -488,10 +532,10 @@
         document.getElementById('tg-token').value = localStorage.getItem('tg_token');
         document.getElementById('tg-chatid').value = localStorage.getItem('tg_chatid');
 
-        // ================= AUTHENTICATION FIREBASE =================
+        // ================= AUTENTIKASI (AUTHENTICATION) FIREBASE =================
         const initAuth = async () => {
             try {
-                // Hanya menggunakan Anonymous login untuk Firebase peribadi anda
+                // Hanya menggunakan login Tanpa Nama (Anonymous) untuk Firebase pribadi Anda
                 await signInAnonymously(auth);
             } catch (err) {
                 console.error("Firebase Auth Error:", err);
@@ -514,7 +558,7 @@
         function setupRealtimeListeners() {
             if (!currentUser) return;
 
-            // MENGGUNAKAN PATH "PUBLIC" (Semua device akan melihat data yang sama)
+            // MENGGUNAKAN PATH "PUBLIC" (Semua perangkat akan melihat data yang sama)
             const jdRef = collection(db, 'artifacts', appId, 'public', 'data', 'jobdesks');
             onSnapshot(jdRef, (snapshot) => {
                 jobdesks = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
@@ -529,7 +573,7 @@
             const actRef = collection(db, 'artifacts', appId, 'public', 'data', 'activities');
             onSnapshot(actRef, (snapshot) => {
                 activities = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                // Sort Descending by Date String
+                // Susun Menurun berdasarkan String Tanggal
                 activities.sort((a, b) => new Date(b.date) - new Date(a.date)); 
                 renderActivities();
                 renderCalendar(); 
@@ -564,7 +608,7 @@
             activeNav.classList.remove('hover:bg-indigo-500');
         };
 
-        // ================= KALENDER LOGIC =================
+        // ================= LOGIKA KALENDER =================
         window.changeMonth = function(offset) {
             currentMonth += offset;
             if (currentMonth < 0) {
@@ -651,11 +695,11 @@
             tbody.innerHTML = dayActivities.map(act => {
                 let statusBadge = '';
                 if (act.status === 'Selesai') {
-                    statusBadge = `<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-not-allowed" title="Tugas selesai dan tidak dapat diubah"><i data-lucide="lock" class="w-3 h-3"></i> ${act.status}</span>`;
+                    statusBadge = `<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-not-allowed" title="Tugas selesai dan tidak dapat diubah"><i data-lucide="lock" class="w-3 h-3"></i> Selesai</span>`;
                 } else if (act.status === 'Sedang Proses') {
-                    statusBadge = `<span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold cursor-pointer" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
+                    statusBadge = `<span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold cursor-pointer" onclick="toggleActivityStatus('${act.id}')">Sedang Proses</span>`;
                 } else {
-                    statusBadge = `<span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold cursor-pointer" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
+                    statusBadge = `<span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold cursor-pointer" onclick="toggleActivityStatus('${act.id}')">Belum Selesai</span>`;
                 }
 
                 return `
@@ -668,7 +712,7 @@
             }).join('');
         }
 
-        // ================= FUNGSI TELEGRAM API =================
+        // ================= FUNGSI API TELEGRAM =================
         async function sendToTelegram(file, caption) {
             const token = localStorage.getItem('tg_token');
             const chatId = localStorage.getItem('tg_chatid');
@@ -684,8 +728,9 @@
 
             let endpoint = 'sendPhoto';
             if (file.type.startsWith('video/')) {
-                endpoint = 'sendVideo';
-                formData.append('video', file);
+                // Mengubah sendVideo menjadi sendDocument untuk video
+                endpoint = 'sendDocument';
+                formData.append('document', file);
             } else {
                 formData.append('photo', file);
             }
@@ -700,7 +745,36 @@
             return data;
         }
 
-        // ================= SETTINGS LOGIC =================
+        // ================= LOGIKA PRATINJAU MEDIA =================
+        function handleMediaPreview(inputElement, previewContainerId) {
+            const container = document.getElementById(previewContainerId);
+            const file = inputElement.files[0];
+            
+            if (!file) {
+                container.innerHTML = '';
+                container.classList.add('hidden');
+                return;
+            }
+
+            const url = URL.createObjectURL(file);
+            container.classList.remove('hidden');
+
+            if (file.type.startsWith('video/')) {
+                container.innerHTML = `<video src="${url}" controls class="w-full max-h-60 object-contain"></video>`;
+            } else {
+                container.innerHTML = `<img src="${url}" class="w-full max-h-60 object-contain bg-slate-100" />`;
+            }
+        }
+
+        document.getElementById('act-photo').addEventListener('change', function() {
+            handleMediaPreview(this, 'act-media-preview');
+        });
+
+        document.getElementById('modal-photo').addEventListener('change', function() {
+            handleMediaPreview(this, 'modal-media-preview');
+        });
+
+        // ================= LOGIKA PENGATURAN =================
         document.getElementById('form-settings').addEventListener('submit', function(e) {
             e.preventDefault();
             localStorage.setItem('tg_token', document.getElementById('tg-token').value.trim());
@@ -708,7 +782,7 @@
             showToast('Pengaturan Telegram berhasil disimpan!', 'success');
         });
 
-        // ================= JOBDESK LOGIC (FIREBASE) =================
+        // ================= LOGIKA JOBDESK (FIREBASE) =================
         const formJobdesk = document.getElementById('form-jobdesk');
         formJobdesk.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -795,13 +869,13 @@
             lucide.createIcons();
 
             try {
-                // Update Jobdesk doc
+                // Perbarui dokumen Jobdesk
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jobdesks', editJobdeskId), {
                     title: title,
                     desc: desc
                 });
                 
-                // Update affected activities (so the name reflects the change everywhere)
+                // Perbarui aktivitas yang terkait
                 const actsToUpdate = activities.filter(a => a.jobdeskId === editJobdeskId);
                 if (actsToUpdate.length > 0) {
                     const actRef = collection(db, 'artifacts', appId, 'public', 'data', 'activities');
@@ -852,13 +926,13 @@
             updateJobdeskSelect();
         }
 
-        // ================= ACTIVITY LOGIC (FIREBASE) =================
+        // ================= LOGIKA AKTIVITAS (FIREBASE) =================
         const formActivity = document.getElementById('form-activity');
         const photoGroup = document.getElementById('photo-upload-group');
         const photoInput = document.getElementById('act-photo');
         const btnSubmitActivity = document.getElementById('btn-submit-activity');
 
-        // Toggle Frequency Options
+        // Toggle Pilihan Frekuensi
         document.getElementById('act-freq').addEventListener('change', function(e) {
             const val = e.target.value;
             const weeklyGroup = document.getElementById('freq-mingguan-options');
@@ -888,7 +962,7 @@
             }
         });
 
-        // Toggle Status & Photo Upload for "Sekali Saja"
+        // Toggle Status & Unggah Foto untuk "Sekali Saja"
         document.querySelectorAll('input[name="act-status"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 if(document.getElementById('act-freq').value !== 'sekali') return;
@@ -899,6 +973,19 @@
                 } else {
                     photoGroup.classList.add('hidden');
                     photoInput.required = false;
+                }
+            });
+        });
+
+        // Toggle Form Upload di Modal Update Status
+        document.querySelectorAll('input[name="modal-act-status"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const val = e.target.value;
+                const uploadSection = document.getElementById('modal-upload-section');
+                if (val === 'Selesai' || val === 'Sedang Proses') {
+                    uploadSection.classList.remove('hidden');
+                } else {
+                    uploadSection.classList.add('hidden');
                 }
             });
         });
@@ -944,9 +1031,9 @@
             const jdData = jobdesks.find(j => j.id === jobdeskId);
             
             let status = document.querySelector('input[name="act-status"]:checked').value;
-            if(freq !== 'sekali') status = 'Belum Selesai'; // Force Belum Selesai for Routine tasks
+            if(freq !== 'sekali') status = 'Belum Selesai'; // Paksa Belum Selesai untuk tugas Rutin
 
-            // Validate Mingguan
+            // Validasi Mingguan
             let selectedDays = [];
             if(freq === 'mingguan') {
                 selectedDays = Array.from(document.querySelectorAll('input[name="act-days"]:checked')).map(el => parseInt(el.value));
@@ -955,7 +1042,7 @@
                 }
             }
 
-            // --- Telegram Upload Handling (Only if "Sekali" & status changed) ---
+            // --- Penanganan Unggahan Telegram (Hanya jika "Sekali" & status berubah) ---
             if (freq === 'sekali' && (status === 'Selesai' || status === 'Sedang Proses')) {
                 const file = photoInput.files[0];
                 if (!file) return showToast('Pilih foto/video bukti terlebih dahulu!', 'warning');
@@ -978,11 +1065,11 @@
                 }
             }
 
-            // --- Generate Schedule Dates ---
+            // --- Generate Tanggal Jadwal ---
             const [sYear, sMonth, sDay] = date.split('-').map(Number);
             const startDate = new Date(sYear, sMonth - 1, sDay);
             const endDate = new Date(startDate);
-            endDate.setMonth(endDate.getMonth() + 6); // Generate occurrences for the next 6 months
+            endDate.setMonth(endDate.getMonth() + 6); // Generate kejadian untuk 6 bulan ke depan
             
             let datesToCreate = [];
 
@@ -1016,7 +1103,7 @@
             lucide.createIcons();
 
             try {
-                // Batch Write (Max 500 per batch, 6 months daily = ~180 writes)
+                // Penulisan Batch (Maksimal 500 per batch, 6 bulan harian = ~180 penulisan)
                 const batch = writeBatch(db);
                 const actColRef = collection(db, 'artifacts', appId, 'public', 'data', 'activities');
                 
@@ -1040,6 +1127,8 @@
                 document.getElementById('act-desc').value = ''; 
                 document.getElementById('act-proof-desc').value = ''; 
                 photoInput.value = '';
+                document.getElementById('act-media-preview').innerHTML = '';
+                document.getElementById('act-media-preview').classList.add('hidden');
                 
                 if(freq === 'sekali') {
                     if(status === 'Belum Selesai') showToast('Aktivitas berhasil dicatat!', 'success');
@@ -1070,7 +1159,7 @@
         };
 
         window.confirmDeleteAll = function() {
-            openConfirmModal('all', null, 'Apakah Anda sangat yakin ingin menghapus SEMUA Jobdesk dan Aktivitas? Tindakan ini akan menghapus semua data secara permanen!');
+            openConfirmModal('all', null, 'Apakah Anda SANGAT YAKIN ingin menghapus SEMUA Jobdesk dan Aktivitas? Tindakan ini akan menghapus semua data secara permanen!');
         };
 
         let deleteTargetId = null;
@@ -1148,16 +1237,8 @@
             if(act) {
                 if(act.status === 'Selesai') return; // Mencegah perubahan jika sudah Selesai
 
-                if(act.status === 'Belum Selesai') {
-                    openTelegramModal(act, 'Sedang Proses');
-                } else if(act.status === 'Sedang Proses') {
-                    openTelegramModal(act, 'Selesai');
-                } else {
-                    if(!currentUser) return;
-                    updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', id), {
-                        status: 'Belum Selesai'
-                    }).catch(err => showToast(err.message, 'error'));
-                }
+                // Langsung buka modal untuk memilih status yang diinginkan
+                openTelegramModal(act);
             }
         };
 
@@ -1188,13 +1269,23 @@
             }, 300);
         };
 
-        function openTelegramModal(activity, targetStatus) {
+        function openTelegramModal(activity) {
             pendingActivityIdForTelegram = activity.id;
-            targetStatusForModal = targetStatus;
             
-            document.getElementById('modal-status-text').innerHTML = `Anda akan mengubah status aktivitas ini menjadi <strong>"${targetStatus}"</strong>. Silakan unggah foto/video bukti untuk dikirimkan ke Telegram.`;
             document.getElementById('modal-task-name').textContent = activity.task;
             document.getElementById('modal-req-proof').textContent = activity.proofDesc || 'Foto/Video dokumentasi aktivitas.';
+            
+            // Set radio button ke status saat ini
+            const radios = document.querySelectorAll('input[name="modal-act-status"]');
+            radios.forEach(r => {
+                r.checked = (r.value === activity.status);
+            });
+
+            // Trigger perubahan untuk menampilkan/menyembunyikan form upload
+            const checkedRadio = document.querySelector('input[name="modal-act-status"]:checked');
+            if(checkedRadio) {
+                checkedRadio.dispatchEvent(new Event('change'));
+            }
             
             const modal = document.getElementById('modal-telegram');
             const content = document.getElementById('modal-telegram-content');
@@ -1216,43 +1307,60 @@
             setTimeout(() => {
                 modal.classList.add('hidden');
                 document.getElementById('modal-photo').value = '';
+                document.getElementById('modal-media-preview').innerHTML = '';
+                document.getElementById('modal-media-preview').classList.add('hidden');
                 pendingActivityIdForTelegram = null;
             }, 300);
         };
 
         window.submitTelegramModal = async function() {
             if (!currentUser) return showToast("Menunggu koneksi database...", "warning");
-            
-            const fileInput = document.getElementById('modal-photo');
-            const file = fileInput.files[0];
-            const btnSubmit = document.getElementById('btn-modal-submit');
-
-            if (!file) return showToast('Harap pilih foto/video bukti terlebih dahulu!', 'warning');
 
             const act = activities.find(a => a.id === pendingActivityIdForTelegram);
             if (!act) return;
 
-            const captionHeader = targetStatusForModal === 'Selesai' ? '✅ *TUGAS SELESAI*' : '⏳ *TUGAS SEDANG DIPROSES*';
-            const caption = `${captionHeader}\n\n📋 *Jobdesk:* ${act.jobdeskTitle}\n📝 *Aktivitas:* ${act.task}\nℹ️ *Deskripsi:* ${act.desc || '-'}\n📸 *Bukti:* ${act.proofDesc || '-'}\n📅 *Tanggal:* ${act.date}`;
+            const newStatus = document.querySelector('input[name="modal-act-status"]:checked').value;
 
+            // Jika status tidak berubah, cukup tutup modal
+            if (newStatus === act.status) {
+                closeTelegramModal();
+                return;
+            }
+
+            const btnSubmit = document.getElementById('btn-modal-submit');
             btnSubmit.disabled = true;
-            btnSubmit.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim...';
+            btnSubmit.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Menyimpan...';
             lucide.createIcons();
 
             try {
-                await sendToTelegram(file, caption);
+                // Jika status barunya butuh bukti file
+                if (newStatus === 'Selesai' || newStatus === 'Sedang Proses') {
+                    const fileInput = document.getElementById('modal-photo');
+                    const file = fileInput.files[0];
+
+                    if (!file) {
+                        throw new Error('Harap pilih foto/video bukti terlebih dahulu!');
+                    }
+
+                    const captionHeader = newStatus === 'Selesai' ? '✅ *TUGAS SELESAI*' : '⏳ *TUGAS SEDANG DIPROSES*';
+                    const caption = `${captionHeader}\n\n📋 *Jobdesk:* ${act.jobdeskTitle}\n📝 *Aktivitas:* ${act.task}\nℹ️ *Deskripsi:* ${act.desc || '-'}\n📸 *Bukti:* ${act.proofDesc || '-'}\n📅 *Tanggal:* ${act.date}`;
+
+                    btnSubmit.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim...';
+                    await sendToTelegram(file, caption);
+                }
                 
+                // Update ke Firebase
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', act.id), {
-                    status: targetStatusForModal
+                    status: newStatus
                 });
                 
-                showToast(`Bukti berhasil dikirim dan aktivitas ditandai "${targetStatusForModal}"!`, 'success');
+                showToast(`Status aktivitas berhasil diperbarui menjadi "${newStatus}"!`, 'success');
                 window.closeTelegramModal();
             } catch (err) {
                 showToast(err.message, 'error');
             } finally {
                 btnSubmit.disabled = false;
-                btnSubmit.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> Kirim & Simpan';
+                btnSubmit.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> Simpan Perubahan';
                 lucide.createIcons();
             }
         };
@@ -1262,7 +1370,7 @@
             const filterDate = document.getElementById('filter-date') ? document.getElementById('filter-date').value : '';
             const filterJobdesk = document.getElementById('filter-jobdesk') ? document.getElementById('filter-jobdesk').value : 'all';
 
-            // Apply filters
+            // Terapkan filter
             let filteredActivities = activities;
             if (filterDate) {
                 filteredActivities = filteredActivities.filter(a => a.date === filterDate);
@@ -1279,11 +1387,11 @@
             tbody.innerHTML = filteredActivities.map(act => {
                 let statusBadge = '';
                 if (act.status === 'Selesai') {
-                    statusBadge = `<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-not-allowed" title="Tugas selesai dan tidak dapat diubah"><i data-lucide="lock" class="w-3 h-3"></i> ${act.status}</span>`;
+                    statusBadge = `<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-not-allowed" title="Tugas selesai dan tidak dapat diubah"><i data-lucide="lock" class="w-3 h-3"></i> Selesai</span>`;
                 } else if (act.status === 'Sedang Proses') {
-                    statusBadge = `<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold cursor-pointer hover:bg-blue-200 transition-colors" title="Klik untuk Selesaikan" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
+                    statusBadge = `<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold cursor-pointer hover:bg-blue-200 transition-colors" title="Ubah Status" onclick="toggleActivityStatus('${act.id}')">Sedang Proses</span>`;
                 } else {
-                    statusBadge = `<span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold cursor-pointer hover:bg-amber-200 transition-colors" title="Klik untuk Proses" onclick="toggleActivityStatus('${act.id}')">${act.status}</span>`;
+                    statusBadge = `<span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold cursor-pointer hover:bg-amber-200 transition-colors" title="Ubah Status" onclick="toggleActivityStatus('${act.id}')">Belum Selesai</span>`;
                 }
 
                 const dateObj = new Date(act.date);
@@ -1311,7 +1419,7 @@
             lucide.createIcons();
         }
 
-        // ================= TOAST NOTIFICATION =================
+        // ================= WADAH NOTIFIKASI TOAST =================
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
