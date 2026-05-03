@@ -67,13 +67,13 @@
 }</textarea>
             <button onclick="saveSetupConfig()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition-colors">Simpan & Lanjutkan</button>
             
-            <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
-                <strong class="text-sm block mb-1">⚠️ SANGAT PENTING: Mencegah Error Permission</strong>
-                Agar aplikasi bisa login dan menyimpan data, buka Firebase Console Anda lalu:<br>
-                1. Ke menu <strong>Authentication</strong> > Sign-in method > Aktifkan <strong>Email/Password</strong>.<br>
-                2. Ke menu <strong>Firestore Database</strong> > tab <strong>Rules</strong>.<br>
-                Ubah aturannya (rules) menjadi persis seperti ini, lalu klik Publish:
-                <code class="block bg-white border border-red-200 p-2 mt-2 rounded font-mono text-[11px]">
+            <div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                <strong class="text-sm block mb-1">⚠️ SANGAT PENTING: Langkah Wajib di Firebase</strong>
+                Jika Anda mendapati error "Could not reach Cloud Firestore backend", pastikan:<br>
+                1. Buka <strong>Firestore Database</strong> di Firebase Console lalu klik tombol <strong>Create Database</strong>.<br>
+                2. Ke menu <strong>Authentication</strong> > Sign-in method > Aktifkan <strong>Email/Password</strong>.<br>
+                3. Di menu <strong>Firestore Database</strong> > tab <strong>Rules</strong>, ubah menjadi:
+                <code class="block bg-white border border-amber-200 p-2 mt-2 rounded font-mono text-[11px] text-slate-800">
 rules_version = '2';<br>
 service cloud.firestore {<br>
 &nbsp;&nbsp;match /databases/{database}/documents {<br>
@@ -83,6 +83,7 @@ service cloud.firestore {<br>
 &nbsp;&nbsp;}<br>
 }
                 </code>
+                Lalu klik <strong>Publish</strong>.
             </div>
         </div>
     </div>
@@ -235,12 +236,12 @@ service cloud.firestore {<br>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Status Penyelesaian (Hanya untuk opsi "Sekali Saja")</label>
                             <div class="flex gap-4 mt-2">
                                 <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="act-status" value="Belum Selesai" class="text-emerald-600 focus:ring-emerald-500" checked>
-                                    <span class="text-sm">Belum Selesai</span>
+                                    <input type="radio" name="act-status" value="Tidak Dikerjakan" class="text-red-600 focus:ring-red-500">
+                                    <span class="text-sm">Tidak Dikerjakan</span>
                                 </label>
                                 <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="act-status" value="Sedang Proses" class="text-blue-600 focus:ring-blue-500">
-                                    <span class="text-sm">Sedang Proses</span>
+                                    <input type="radio" name="act-status" value="Belum Selesai" class="text-amber-600 focus:ring-amber-500">
+                                    <span class="text-sm">Belum Selesai</span>
                                 </label>
                                 <label class="flex items-center gap-2 cursor-pointer">
                                     <input type="radio" name="act-status" value="Selesai" class="text-emerald-600 focus:ring-emerald-500">
@@ -248,19 +249,26 @@ service cloud.firestore {<br>
                                 </label>
                             </div>
                         </div>
+
+                        <!-- Form Alasan Belum Selesai -->
+                        <div id="reason-group" class="hidden">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Alasan Belum Selesai <span class="text-red-500">*</span></label>
+                            <input type="text" id="act-reason" placeholder="Ketik alasan mengapa tugas ini belum selesai..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+                        </div>
                         
+                        <!-- Form Upload File -->
                         <div id="photo-upload-group" class="hidden p-4 bg-slate-50 border border-slate-200 rounded-lg">
                             <label class="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
                                 <i data-lucide="file-up" class="w-4 h-4 text-emerald-600"></i> Unggah Bukti (Otomatis ke Telegram)
                             </label>
                             <input type="file" id="act-photo" accept="image/*,video/*" class="w-full mt-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all">
-                            <p class="text-xs text-slate-500 mt-2">Foto/Video wajib diunggah karena status ditandai "Sedang Proses" atau "Selesai" (Maksimum 50MB).</p>
+                            <p class="text-xs text-slate-500 mt-2">Foto/Video wajib diunggah karena status ditandai "Selesai" atau "Belum Selesai" (Maksimum 50MB).</p>
                             <div id="act-media-preview" class="hidden mt-3 rounded-lg overflow-hidden border border-slate-200 bg-black flex justify-center"></div>
                         </div>
 
                         <div id="rutin-notice" class="hidden p-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg flex gap-2">
                             <i data-lucide="info" class="w-5 h-5 flex-shrink-0"></i>
-                            <span>Aktivitas rutin akan dijadwalkan secara otomatis ke dalam Kalender dengan status awal "Belum Selesai". Anda dapat mengubah statusnya per tanggal di kalender.</span>
+                            <span>Aktivitas rutin akan dijadwalkan secara otomatis ke dalam Kalender dengan status awal "Belum Input Progres". Anda dapat mengubah statusnya per tanggal di kalender.</span>
                         </div>
 
                         <div class="flex justify-end pt-2">
@@ -482,19 +490,19 @@ service cloud.firestore {<br>
         </div>
     </div>
 
-    <!-- Modal Konfirmasi Unggah Telegram -->
+    <!-- Modal Konfirmasi Status / Unggah Telegram -->
     <div id="modal-telegram" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300" id="modal-telegram-content">
             <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
                 <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-                    <i data-lucide="arrow-right-circle" class="w-5 h-5 text-blue-500"></i> Perbarui Status Aktivitas
+                    <i data-lucide="arrow-right-circle" class="w-5 h-5 text-blue-500"></i> Ubah Status Aktivitas
                 </h3>
                 <button onclick="closeTelegramModal()" class="text-slate-400 hover:text-slate-600">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
             <div class="p-6">
-                <p class="text-sm text-slate-600 mb-4">Silakan pilih status baru untuk aktivitas ini. Bukti foto/video wajib diunggah untuk status "Sedang Proses" atau "Selesai".</p>
+                <p class="text-sm text-slate-600 mb-4">Silakan pilih status baru untuk aktivitas ini. Bukti foto/video wajib diunggah untuk status "Selesai" dan "Belum Selesai".</p>
                 <div class="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                     <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Aktivitas</p>
                     <p class="text-sm font-medium text-slate-800" id="modal-task-name">-</p>
@@ -504,12 +512,12 @@ service cloud.firestore {<br>
                     <label class="block text-sm font-medium text-slate-700 mb-2">Pilih Status Baru</label>
                     <div class="flex gap-4">
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="modal-act-status" value="Belum Selesai" class="text-emerald-600 focus:ring-emerald-500">
-                            <span class="text-sm">Belum Selesai</span>
+                            <input type="radio" name="modal-act-status" value="Tidak Dikerjakan" class="text-red-600 focus:ring-red-500">
+                            <span class="text-sm">Tidak Dikerjakan</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="modal-act-status" value="Sedang Proses" class="text-blue-600 focus:ring-blue-500">
-                            <span class="text-sm">Sedang Proses</span>
+                            <input type="radio" name="modal-act-status" value="Belum Selesai" class="text-amber-600 focus:ring-amber-500">
+                            <span class="text-sm">Belum Selesai</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="modal-act-status" value="Selesai" class="text-emerald-600 focus:ring-emerald-500">
@@ -519,6 +527,12 @@ service cloud.firestore {<br>
                 </div>
 
                 <div id="modal-upload-section" class="hidden">
+                    <!-- Input Alasan (Khusus Belum Selesai) -->
+                    <div id="modal-reason-group" class="hidden mb-4">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Alasan Belum Selesai <span class="text-red-500">*</span></label>
+                        <input type="text" id="modal-reason" placeholder="Contoh: Terkendala cuaca..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                    </div>
+
                     <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                         <p class="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-1">Bukti yang Diminta</p>
                         <p class="text-sm font-medium text-amber-800" id="modal-req-proof">-</p>
@@ -565,6 +579,10 @@ service cloud.firestore {<br>
                     <p class="text-xs font-semibold text-slate-500 uppercase">Keterangan Bukti Laporan</p>
                     <p class="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-100" id="detail-proof-desc">-</p>
                 </div>
+                <div id="detail-reason-wrapper" class="hidden">
+                    <p class="text-xs font-semibold text-slate-500 uppercase">Alasan Belum Selesai</p>
+                    <p class="text-sm text-red-700 bg-red-50 p-3 rounded-lg border border-red-100" id="detail-reason">-</p>
+                </div>
             </div>
             <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end">
                 <button onclick="closeActivityDetailModal()" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">Tutup</button>
@@ -578,7 +596,7 @@ service cloud.firestore {<br>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, deleteDoc, updateDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeFirestore, collection, doc, addDoc, deleteDoc, updateDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Variabel Global Firebase
         let app = null;
@@ -601,11 +619,9 @@ service cloud.firestore {<br>
         // ================= PARSING FIREBASE CONFIG (SANGAT AMAN) =================
         function parseConfigStr(str) {
             const config = {};
-            // Array kunci yang wajib diekstrak
             const keys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
             
             for (const key of keys) {
-                // Regex untuk mencari key: "value" atau 'value' dengan/tanpa spasi/koma
                 const regex = new RegExp(`${key}\\s*:\\s*['"]([^'"]+)['"]`);
                 const match = str.match(regex);
                 if (match && match[1]) {
@@ -613,7 +629,6 @@ service cloud.firestore {<br>
                 }
             }
             
-            // Validasi jika apiKey dan projectId berhasil ditemukan
             if (config.apiKey && config.projectId) {
                 return config;
             }
@@ -627,7 +642,8 @@ service cloud.firestore {<br>
 
             if (!config) {
                 if (!configStr) {
-                    document.getElementById('setup-screen').classList.remove('hidden');
+                    const setupScreen = document.getElementById('setup-screen');
+                    if(setupScreen) setupScreen.classList.remove('hidden');
                     return;
                 }
                 config = parseConfigStr(configStr);
@@ -636,41 +652,46 @@ service cloud.firestore {<br>
             if (!config || !config.apiKey) {
                 showToast("Konfigurasi Firebase tidak valid!", "error");
                 localStorage.removeItem('worklog_firebase_config');
-                document.getElementById('setup-screen').classList.remove('hidden');
+                const setupScreen = document.getElementById('setup-screen');
+                if(setupScreen) setupScreen.classList.remove('hidden');
                 return;
             }
 
             try {
-                // Hanya jalankan initializeApp jika app belum ada
                 if (!app) {
                     app = initializeApp(config);
                     auth = getAuth(app);
-                    db = getFirestore(app);
+                    db = initializeFirestore(app, {
+                        experimentalForceLongPolling: true
+                    });
                 }
 
-                // Masukkan string kembali ke form pengaturan
-                document.getElementById('update-firebase-config').value = configStr || JSON.stringify(config, null, 2);
+                const updateConfigEl = document.getElementById('update-firebase-config');
+                if(updateConfigEl) updateConfigEl.value = configStr || JSON.stringify(config, null, 2);
 
-                // Sembunyikan layar setup dengan aman tanpa reload halaman!
-                document.getElementById('setup-screen').classList.add('hidden');
+                const setupScreen = document.getElementById('setup-screen');
+                if(setupScreen) setupScreen.classList.add('hidden');
 
-                // Dengarkan status akun (Login / Logout)
                 onAuthStateChanged(auth, user => {
                     if (user) {
                         currentUser = user;
-                        document.getElementById('user-email-display').textContent = user.email;
+                        const userDisplay = document.getElementById('user-email-display');
+                        if(userDisplay) userDisplay.textContent = user.email;
                         
-                        document.getElementById('auth-screen').classList.add('hidden');
-                        document.getElementById('main-app').classList.remove('hidden');
+                        const authScreen = document.getElementById('auth-screen');
+                        const mainApp = document.getElementById('main-app');
+                        if(authScreen) authScreen.classList.add('hidden');
+                        if(mainApp) mainApp.classList.remove('hidden');
                         
                         setupRealtimeListeners();
-                        switchTab('jobdesk'); // Default tab
+                        switchTab('jobdesk'); 
                     } else {
                         currentUser = null;
-                        document.getElementById('main-app').classList.add('hidden');
-                        document.getElementById('auth-screen').classList.remove('hidden');
+                        const mainApp = document.getElementById('main-app');
+                        const authScreen = document.getElementById('auth-screen');
+                        if(mainApp) mainApp.classList.add('hidden');
+                        if(authScreen) authScreen.classList.remove('hidden');
                         
-                        // Bersihkan data lokal jika keluar
                         if(jdUnsubscribe) jdUnsubscribe();
                         if(actUnsubscribe) actUnsubscribe();
                         jobdesks = [];
@@ -679,16 +700,15 @@ service cloud.firestore {<br>
                 });
             } catch (error) {
                 console.error("Firebase Init Error:", error);
-                // Menampilkan error Firebase asli agar mudah dilacak
                 showToast("Gagal inisialisasi: " + error.message, "error");
-                document.getElementById('setup-screen').classList.remove('hidden');
+                const setupScreen = document.getElementById('setup-screen');
+                if(setupScreen) setupScreen.classList.remove('hidden');
             }
         }
 
-        // Jalankan fungsi saat web dibuka
         initFirebase();
 
-        // ================= FUNGSI SETUP (TANPA RELOAD SCREEN PUTIH) =================
+        // ================= FUNGSI SETUP =================
         window.saveSetupConfig = function() {
             const val = document.getElementById('setup-config-input').value.trim();
             if(!val) return showToast("Harap isi konfigurasi terlebih dahulu!", "warning");
@@ -696,47 +716,51 @@ service cloud.firestore {<br>
             const config = parseConfigStr(val);
             if(!config || !config.apiKey) return showToast("Format konfigurasi gagal dibaca. Coba tempel ulang tanpa tambahan lain.", "error");
 
-            // Simpan dan inisialisasi TANPA me-reload halaman
             localStorage.setItem('worklog_firebase_config', val);
             initFirebase(config, val);
         };
 
-        // Pembaruan Config di Menu Pengaturan (Boleh reload karena user sengaja ingin me-reset total)
-        document.getElementById('form-update-firebase').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const val = document.getElementById('update-firebase-config').value.trim();
-            if(!val) return;
-            localStorage.setItem('worklog_firebase_config', val);
-            showToast("Konfigurasi disimpan. Memuat ulang aplikasi...", "success");
-            setTimeout(() => window.location.reload(), 1000);
-        });
+        const formUpdateFirebase = document.getElementById('form-update-firebase');
+        if(formUpdateFirebase) {
+            formUpdateFirebase.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const val = document.getElementById('update-firebase-config').value.trim();
+                if(!val) return;
+                localStorage.setItem('worklog_firebase_config', val);
+                showToast("Konfigurasi disimpan. Memuat ulang aplikasi...", "success");
+                setTimeout(() => window.location.reload(), 1000);
+            });
+        }
 
-        // ================= AUTENTIKASI (EMAIL / PASSWORD) =================
-        document.getElementById('auth-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('auth-email').value.trim();
-            const password = document.getElementById('auth-password').value.trim();
-            const btn = document.getElementById('btn-login');
+        // ================= AUTENTIKASI =================
+        const authForm = document.getElementById('auth-form');
+        if(authForm) {
+            authForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('auth-email').value.trim();
+                const password = document.getElementById('auth-password').value.trim();
+                const btn = document.getElementById('btn-login');
 
-            btn.disabled = true;
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Memproses...';
-            lucide.createIcons();
-
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                showToast("Berhasil masuk!", "success");
-            } catch(err) {
-                let msg = err.message;
-                if(err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-                    msg = "Email atau Password salah, atau akun belum didaftarkan.";
-                }
-                showToast("Login gagal: " + msg, "error");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i data-lucide="log-in" class="w-5 h-5"></i> Masuk';
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Memproses...';
                 lucide.createIcons();
-            }
-        });
+
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    showToast("Berhasil masuk!", "success");
+                } catch(err) {
+                    let msg = err.message;
+                    if(err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+                        msg = "Email atau Password salah, atau akun belum didaftarkan.";
+                    }
+                    showToast("Login gagal: " + msg, "error");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i data-lucide="log-in" class="w-5 h-5"></i> Masuk';
+                    lucide.createIcons();
+                }
+            });
+        }
 
         window.handleRegister = async function() {
             const email = document.getElementById('auth-email').value.trim();
@@ -779,7 +803,6 @@ service cloud.firestore {<br>
         function setupRealtimeListeners() {
             if (!currentUser || !db) return;
 
-            // Menggunakan PATH Spesifik untuk Akun (Email) Ini Sendiri
             const jdRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks');
             jdUnsubscribe = onSnapshot(jdRef, (snapshot) => {
                 jobdesks = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
@@ -810,7 +833,7 @@ service cloud.firestore {<br>
             });
         }
 
-        // ================= STATE DAN FUNGSI DEFAULT LAINNYA =================
+        // ================= STATE =================
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
         
@@ -823,24 +846,31 @@ service cloud.firestore {<br>
         }
         let selectedDateForCalendar = getLocalYYYYMMDD(new Date());
 
-        document.getElementById('act-date').value = selectedDateForCalendar;
-        document.getElementById('filter-date').value = selectedDateForCalendar; 
+        const actDateEl = document.getElementById('act-date');
+        const filterDateEl = document.getElementById('filter-date');
+        if(actDateEl) actDateEl.value = selectedDateForCalendar;
+        if(filterDateEl) filterDateEl.value = selectedDateForCalendar;
 
-        // Setup Nilai Default Telegram
         const defaultBotToken = '8614464949:AAGt0GmOes7efeB7HqugsLjQNe9TBVwt6bI';
         const defaultChatId = '-5299037561';
         if (!localStorage.getItem('tg_token')) localStorage.setItem('tg_token', defaultBotToken);
         if (!localStorage.getItem('tg_chatid')) localStorage.setItem('tg_chatid', defaultChatId);
-        document.getElementById('tg-token').value = localStorage.getItem('tg_token');
-        document.getElementById('tg-chatid').value = localStorage.getItem('tg_chatid');
+        
+        const tgTokenEl = document.getElementById('tg-token');
+        const tgChatidEl = document.getElementById('tg-chatid');
+        if(tgTokenEl) tgTokenEl.value = localStorage.getItem('tg_token');
+        if(tgChatidEl) tgChatidEl.value = localStorage.getItem('tg_chatid');
 
         // ================= NAVIGASI TAB =================
         window.switchTab = function(tabId) {
             ['jobdesk', 'activity', 'calendar', 'settings'].forEach(id => {
-                document.getElementById(`tab-${id}`).classList.add('hidden');
-                const nav = document.getElementById(`nav-${id}`);
-                nav.classList.remove('bg-indigo-700');
-                nav.classList.add('hover:bg-indigo-500');
+                const tabEl = document.getElementById(`tab-${id}`);
+                const navEl = document.getElementById(`nav-${id}`);
+                if(tabEl) tabEl.classList.add('hidden');
+                if(navEl) {
+                    navEl.classList.remove('bg-indigo-700');
+                    navEl.classList.add('hover:bg-indigo-500');
+                }
             });
 
             if (tabId === 'activity' || tabId === 'calendar') {
@@ -853,10 +883,13 @@ service cloud.firestore {<br>
                 if(tabId === 'calendar') renderCalendar();
             }
 
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            const activeNav = document.getElementById(`nav-${tabId}`);
-            activeNav.classList.add('bg-indigo-700');
-            activeNav.classList.remove('hover:bg-indigo-500');
+            const activeTabEl = document.getElementById(`tab-${tabId}`);
+            const activeNavEl = document.getElementById(`nav-${tabId}`);
+            if(activeTabEl) activeTabEl.classList.remove('hidden');
+            if(activeNavEl) {
+                activeNavEl.classList.add('bg-indigo-700');
+                activeNavEl.classList.remove('hover:bg-indigo-500');
+            }
         };
 
         // ================= LOGIKA KALENDER =================
@@ -880,6 +913,8 @@ service cloud.firestore {<br>
         function renderCalendar() {
             const grid = document.getElementById('calendar-grid');
             const monthYearLabel = document.getElementById('calendar-month-year');
+            if(!grid || !monthYearLabel) return;
+
             const firstDay = new Date(currentYear, currentMonth, 1).getDay();
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
             const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -930,6 +965,7 @@ service cloud.firestore {<br>
         function renderCalendarActivities() {
             const tbody = document.getElementById('list-calendar-activity');
             const dateLabel = document.getElementById('calendar-selected-date-text');
+            if(!tbody || !dateLabel) return;
             
             if (!selectedDateForCalendar) return;
 
@@ -947,10 +983,12 @@ service cloud.firestore {<br>
                 let statusBadge = '';
                 if (act.status === 'Selesai') {
                     statusBadge = `<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-not-allowed" title="Tugas selesai dan tidak dapat diubah"><i data-lucide="lock" class="w-3 h-3"></i> Selesai</span>`;
-                } else if (act.status === 'Sedang Proses') {
-                    statusBadge = `<span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold cursor-pointer" onclick="toggleActivityStatus('${act.id}')">Sedang Proses</span>`;
+                } else if (act.status === 'Tidak Dikerjakan') {
+                    statusBadge = `<span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-pointer hover:bg-red-200 transition-colors" title="Ubah Status" onclick="window.toggleActivityStatus('${act.id}')">Tidak Dikerjakan <i data-lucide="edit-2" class="w-3 h-3"></i></span>`;
+                } else if (act.status === 'Belum Selesai') {
+                    statusBadge = `<span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-pointer hover:bg-amber-200 transition-colors" title="Ubah Status" onclick="window.toggleActivityStatus('${act.id}')">Belum Selesai <i data-lucide="edit-2" class="w-3 h-3"></i></span>`;
                 } else {
-                    statusBadge = `<span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold cursor-pointer" onclick="toggleActivityStatus('${act.id}')">Belum Selesai</span>`;
+                    statusBadge = `<span class="px-3 py-1 bg-slate-100 text-slate-700 border border-slate-300 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-pointer hover:bg-slate-200 transition-colors" title="Ubah Status" onclick="window.toggleActivityStatus('${act.id}')">Belum Input Progres <i data-lucide="edit-2" class="w-3 h-3"></i></span>`;
                 }
 
                 return `
@@ -961,6 +999,8 @@ service cloud.firestore {<br>
                     </tr>
                 `;
             }).join('');
+            
+            lucide.createIcons();
         }
 
         // ================= FUNGSI API TELEGRAM =================
@@ -998,8 +1038,9 @@ service cloud.firestore {<br>
         // ================= LOGIKA PRATINJAU MEDIA =================
         function handleMediaPreview(inputElement, previewContainerId) {
             const container = document.getElementById(previewContainerId);
+            if(!container) return;
+
             const file = inputElement.files[0];
-            
             if (!file) {
                 container.innerHTML = '';
                 container.classList.add('hidden');
@@ -1016,46 +1057,49 @@ service cloud.firestore {<br>
             }
         }
 
-        document.getElementById('act-photo').addEventListener('change', function() {
-            handleMediaPreview(this, 'act-media-preview');
-        });
+        const actPhotoEl = document.getElementById('act-photo');
+        if(actPhotoEl) actPhotoEl.addEventListener('change', function() { handleMediaPreview(this, 'act-media-preview'); });
 
-        document.getElementById('modal-photo').addEventListener('change', function() {
-            handleMediaPreview(this, 'modal-media-preview');
-        });
+        const modalPhotoEl = document.getElementById('modal-photo');
+        if(modalPhotoEl) modalPhotoEl.addEventListener('change', function() { handleMediaPreview(this, 'modal-media-preview'); });
 
         // ================= LOGIKA PENGATURAN (TELEGRAM) =================
-        document.getElementById('form-settings').addEventListener('submit', function(e) {
-            e.preventDefault();
-            localStorage.setItem('tg_token', document.getElementById('tg-token').value.trim());
-            localStorage.setItem('tg_chatid', document.getElementById('tg-chatid').value.trim());
-            showToast('Pengaturan Telegram berhasil disimpan!', 'success');
-        });
+        const formSettingsEl = document.getElementById('form-settings');
+        if(formSettingsEl) {
+            formSettingsEl.addEventListener('submit', function(e) {
+                e.preventDefault();
+                localStorage.setItem('tg_token', document.getElementById('tg-token').value.trim());
+                localStorage.setItem('tg_chatid', document.getElementById('tg-chatid').value.trim());
+                showToast('Pengaturan Telegram berhasil disimpan!', 'success');
+            });
+        }
 
         // ================= LOGIKA JOBDESK (FIREBASE) =================
         const formJobdesk = document.getElementById('form-jobdesk');
-        formJobdesk.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            if (!currentUser || !db) return showToast("Menunggu koneksi database...", "warning");
+        if(formJobdesk) {
+            formJobdesk.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (!currentUser || !db) return showToast("Menunggu koneksi database...", "warning");
 
-            const title = document.getElementById('jd-title').value.trim();
-            const desc = document.getElementById('jd-desc').value.trim();
-            const btnSubmit = formJobdesk.querySelector('button[type="submit"]');
+                const title = document.getElementById('jd-title').value.trim();
+                const desc = document.getElementById('jd-desc').value.trim();
+                const btnSubmit = formJobdesk.querySelector('button[type="submit"]');
 
-            if (title && desc) {
-                btnSubmit.disabled = true;
-                try {
-                    const jdRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks');
-                    await addDoc(jdRef, { title, desc, createdAt: Date.now() });
-                    formJobdesk.reset();
-                    showToast('Jobdesk berhasil ditambahkan!', 'success');
-                } catch (error) {
-                    showToast(error.message, 'error');
-                } finally {
-                    btnSubmit.disabled = false;
+                if (title && desc) {
+                    btnSubmit.disabled = true;
+                    try {
+                        const jdRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks');
+                        await addDoc(jdRef, { title, desc, createdAt: Date.now() });
+                        formJobdesk.reset();
+                        showToast('Jobdesk berhasil ditambahkan!', 'success');
+                    } catch (error) {
+                        showToast(error.message, 'error');
+                    } finally {
+                        btnSubmit.disabled = false;
+                    }
                 }
-            }
-        });
+            });
+        }
 
         window.deleteJobdesk = async function(id) {
             if (!currentUser || !db) return;
@@ -1083,27 +1127,33 @@ service cloud.firestore {<br>
             if (!jd) return;
             
             editJobdeskId = id;
-            document.getElementById('edit-jd-title').value = jd.title;
-            document.getElementById('edit-jd-desc').value = jd.desc;
+            const titleEl = document.getElementById('edit-jd-title');
+            const descEl = document.getElementById('edit-jd-desc');
+            if (titleEl) titleEl.value = jd.title;
+            if (descEl) descEl.value = jd.desc;
             
             const modal = document.getElementById('modal-edit-jobdesk');
             const content = document.getElementById('modal-edit-jobdesk-content');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                content.classList.remove('scale-95');
-            }, 10);
+            if(modal && content) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-95');
+                }, 10);
+            }
         };
 
         window.closeEditJobdeskModal = function() {
             const modal = document.getElementById('modal-edit-jobdesk');
             const content = document.getElementById('modal-edit-jobdesk-content');
-            modal.classList.add('opacity-0');
-            content.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                editJobdeskId = null;
-            }, 300);
+            if(modal && content) {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    editJobdeskId = null;
+                }, 300);
+            }
         };
 
         window.submitEditJobdesk = async function() {
@@ -1149,6 +1199,8 @@ service cloud.firestore {<br>
 
         function renderJobdesks() {
             const container = document.getElementById('list-jobdesk');
+            if(!container) return;
+
             if (jobdesks.length === 0) {
                 container.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500 bg-white rounded-xl border border-slate-200 border-dashed">Belum ada jobdesk yang ditambahkan.</div>`;
                 return;
@@ -1176,49 +1228,87 @@ service cloud.firestore {<br>
 
         // ================= LOGIKA AKTIVITAS (FIREBASE) =================
         const formActivity = document.getElementById('form-activity');
-        const photoGroup = document.getElementById('photo-upload-group');
-        const photoInput = document.getElementById('act-photo');
-        const btnSubmitActivity = document.getElementById('btn-submit-activity');
-
-        document.getElementById('act-freq').addEventListener('change', function(e) {
-            const val = e.target.value;
-            const weeklyGroup = document.getElementById('freq-mingguan-options');
-            const statusGroup = document.getElementById('status-group');
-            const rutinNotice = document.getElementById('rutin-notice');
-            
-            if(val === 'mingguan') {
-                weeklyGroup.classList.remove('hidden');
-            } else {
-                weeklyGroup.classList.add('hidden');
-            }
-
-            if(val !== 'sekali') {
-                statusGroup.classList.add('hidden');
-                photoGroup.classList.add('hidden');
-                rutinNotice.classList.remove('hidden');
-                photoInput.required = false;
-                document.querySelector('input[name="act-status"][value="Belum Selesai"]').checked = true;
-            } else {
-                statusGroup.classList.remove('hidden');
-                rutinNotice.classList.add('hidden');
-                const checkedStatus = document.querySelector('input[name="act-status"]:checked').value;
-                if(checkedStatus !== 'Belum Selesai') {
-                    photoGroup.classList.remove('hidden');
-                    photoInput.required = true;
+        
+        const actFreqEl = document.getElementById('act-freq');
+        if(actFreqEl) {
+            actFreqEl.addEventListener('change', function(e) {
+                const val = e.target.value;
+                const weeklyGroup = document.getElementById('freq-mingguan-options');
+                const statusGroup = document.getElementById('status-group');
+                const rutinNotice = document.getElementById('rutin-notice');
+                const photoGroup = document.getElementById('photo-upload-group');
+                const photoInput = document.getElementById('act-photo');
+                const reasonGroup = document.getElementById('reason-group');
+                const reasonInput = document.getElementById('act-reason');
+                
+                if(weeklyGroup) {
+                    if(val === 'mingguan') weeklyGroup.classList.remove('hidden');
+                    else weeklyGroup.classList.add('hidden');
                 }
-            }
-        });
+
+                if(val !== 'sekali') {
+                    if (statusGroup) statusGroup.classList.add('hidden');
+                    if (photoGroup) photoGroup.classList.add('hidden');
+                    if (reasonGroup) reasonGroup.classList.add('hidden');
+                    if (rutinNotice) rutinNotice.classList.remove('hidden');
+                    if (photoInput) photoInput.required = false;
+                    if (reasonInput) reasonInput.required = false;
+                    document.querySelectorAll('input[name="act-status"]').forEach(r => r.checked = false);
+                } else {
+                    if (statusGroup) statusGroup.classList.remove('hidden');
+                    if (rutinNotice) rutinNotice.classList.add('hidden');
+                    const checkedRadio = document.querySelector('input[name="act-status"]:checked');
+                    const statusVal = checkedRadio ? checkedRadio.value : '';
+
+                    if(statusVal === 'Selesai' || statusVal === 'Belum Selesai') {
+                        if (photoGroup) photoGroup.classList.remove('hidden');
+                        if (photoInput) photoInput.required = true;
+                        
+                        if (statusVal === 'Belum Selesai') {
+                            if (reasonGroup) reasonGroup.classList.remove('hidden');
+                            if (reasonInput) reasonInput.required = true;
+                        } else {
+                            if (reasonGroup) reasonGroup.classList.add('hidden');
+                            if (reasonInput) reasonInput.required = false;
+                        }
+                    } else {
+                        if (photoGroup) photoGroup.classList.add('hidden');
+                        if (photoInput) photoInput.required = false;
+                        if (reasonGroup) reasonGroup.classList.add('hidden');
+                        if (reasonInput) reasonInput.required = false;
+                    }
+                }
+            });
+        }
 
         document.querySelectorAll('input[name="act-status"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                if(document.getElementById('act-freq').value !== 'sekali') return;
+                const freqEl = document.getElementById('act-freq');
+                if(freqEl && freqEl.value !== 'sekali') return;
 
-                if (e.target.value === 'Selesai' || e.target.value === 'Sedang Proses') {
-                    photoGroup.classList.remove('hidden');
-                    photoInput.required = true;
+                const photoGroup = document.getElementById('photo-upload-group');
+                const photoInput = document.getElementById('act-photo');
+                const reasonGroup = document.getElementById('reason-group');
+                const reasonInput = document.getElementById('act-reason');
+                
+                const val = e.target.value;
+
+                if (val === 'Selesai' || val === 'Belum Selesai') {
+                    if (photoGroup) photoGroup.classList.remove('hidden');
+                    if (photoInput) photoInput.required = true;
+
+                    if (val === 'Belum Selesai') {
+                        if (reasonGroup) reasonGroup.classList.remove('hidden');
+                        if (reasonInput) reasonInput.required = true;
+                    } else {
+                        if (reasonGroup) reasonGroup.classList.add('hidden');
+                        if (reasonInput) reasonInput.required = false;
+                    }
                 } else {
-                    photoGroup.classList.add('hidden');
-                    photoInput.required = false;
+                    if (photoGroup) photoGroup.classList.add('hidden');
+                    if (photoInput) photoInput.required = false;
+                    if (reasonGroup) reasonGroup.classList.add('hidden');
+                    if (reasonInput) reasonInput.required = false;
                 }
             });
         });
@@ -1227,20 +1317,37 @@ service cloud.firestore {<br>
             radio.addEventListener('change', (e) => {
                 const val = e.target.value;
                 const uploadSection = document.getElementById('modal-upload-section');
-                if (val === 'Selesai' || val === 'Sedang Proses') {
-                    uploadSection.classList.remove('hidden');
-                } else {
-                    uploadSection.classList.add('hidden');
+                const reasonGroup = document.getElementById('modal-reason-group');
+                const reasonInput = document.getElementById('modal-reason');
+
+                if (uploadSection) {
+                    if (val === 'Selesai' || val === 'Belum Selesai') {
+                        uploadSection.classList.remove('hidden');
+
+                        if (val === 'Belum Selesai') {
+                            if (reasonGroup) reasonGroup.classList.remove('hidden');
+                            if (reasonInput) reasonInput.required = true;
+                        } else {
+                            if (reasonGroup) reasonGroup.classList.add('hidden');
+                            if (reasonInput) reasonInput.required = false;
+                        }
+                    } else {
+                        uploadSection.classList.add('hidden');
+                        if (reasonGroup) reasonGroup.classList.add('hidden');
+                        if (reasonInput) reasonInput.required = false;
+                    }
                 }
             });
         });
 
-        document.getElementById('filter-date').addEventListener('change', () => renderActivities());
-        document.getElementById('filter-jobdesk').addEventListener('change', () => renderActivities());
+        const filterDateInput = document.getElementById('filter-date');
+        const filterJobdeskInput = document.getElementById('filter-jobdesk');
+        if (filterDateInput) filterDateInput.addEventListener('change', () => renderActivities());
+        if (filterJobdeskInput) filterJobdeskInput.addEventListener('change', () => renderActivities());
 
         window.resetFilters = function() {
-            document.getElementById('filter-date').value = '';
-            document.getElementById('filter-jobdesk').value = 'all';
+            if(filterDateInput) filterDateInput.value = '';
+            if(filterJobdeskInput) filterJobdeskInput.value = 'all';
             renderActivities();
         };
 
@@ -1248,141 +1355,178 @@ service cloud.firestore {<br>
             const select = document.getElementById('act-jobdesk');
             const filterSelect = document.getElementById('filter-jobdesk');
             
-            const currentValue = select.value;
+            const currentValue = select ? select.value : '';
             const currentFilterValue = filterSelect ? filterSelect.value : 'all';
 
             const optionsHTML = jobdesks.map(jd => `<option value="${jd.id}">${jd.title}</option>`).join('');
             
-            select.innerHTML = '<option value="" disabled selected>Pilih Jobdesk...</option>' + optionsHTML;
-            if (jobdesks.some(jd => jd.id === currentValue)) select.value = currentValue;
+            if(select) {
+                select.innerHTML = '<option value="" disabled selected>Pilih Jobdesk...</option>' + optionsHTML;
+                if (jobdesks.some(jd => jd.id === currentValue)) select.value = currentValue;
+            }
 
-            if (filterSelect) {
+            if(filterSelect) {
                 filterSelect.innerHTML = '<option value="all">Semua Jobdesk</option>' + optionsHTML;
                 if (jobdesks.some(jd => jd.id === currentFilterValue)) filterSelect.value = currentFilterValue;
             }
         }
 
-        formActivity.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            if (!currentUser || !db) return showToast("Menunggu koneksi database...", "warning");
+        if(formActivity) {
+            formActivity.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (!currentUser || !db) return showToast("Menunggu koneksi database...", "warning");
 
-            const date = document.getElementById('act-date').value;
-            const freq = document.getElementById('act-freq').value;
-            const jobdeskId = document.getElementById('act-jobdesk').value;
-            const task = document.getElementById('act-task').value.trim();
-            const desc = document.getElementById('act-desc').value.trim();
-            const proofDesc = document.getElementById('act-proof-desc').value.trim();
-            const jdData = jobdesks.find(j => j.id === jobdeskId);
-            
-            let status = document.querySelector('input[name="act-status"]:checked').value;
-            if(freq !== 'sekali') status = 'Belum Selesai'; 
-
-            let selectedDays = [];
-            if(freq === 'mingguan') {
-                selectedDays = Array.from(document.querySelectorAll('input[name="act-days"]:checked')).map(el => parseInt(el.value));
-                if(selectedDays.length === 0) {
-                    return showToast('Harap pilih minimal 1 hari untuk jadwal mingguan!', 'warning');
-                }
-            }
-
-            if (freq === 'sekali' && (status === 'Selesai' || status === 'Sedang Proses')) {
-                const file = photoInput.files[0];
-                if (!file) return showToast('Pilih foto/video bukti terlebih dahulu!', 'warning');
+                const date = document.getElementById('act-date').value;
+                const freq = document.getElementById('act-freq').value;
+                const jobdeskId = document.getElementById('act-jobdesk').value;
+                const task = document.getElementById('act-task').value.trim();
+                const desc = document.getElementById('act-desc').value.trim();
+                const proofDesc = document.getElementById('act-proof-desc').value.trim();
+                const jdData = jobdesks.find(j => j.id === jobdeskId);
                 
-                const captionHeader = status === 'Selesai' ? '✅ *TUGAS SELESAI*' : '⏳ *TUGAS SEDANG DIPROSES*';
-                const caption = `${captionHeader}\n\n📋 *Jobdesk:* ${jdData ? jdData.title : 'Umum'}\n📝 *Aktivitas:* ${task}\nℹ️ *Deskripsi:* ${desc || '-'}\n📸 *Bukti:* ${proofDesc || '-'}\n📅 *Tanggal:* ${date}`;
+                const statusNode = document.querySelector('input[name="act-status"]:checked');
+                let status = statusNode ? statusNode.value : 'Belum Input Progres';
+                if(freq !== 'sekali') status = 'Belum Input Progres'; 
+
+                let reason = '';
+                if (status === 'Belum Selesai') {
+                    const reasonInput = document.getElementById('act-reason');
+                    if(reasonInput) reason = reasonInput.value.trim();
+                }
+
+                let selectedDays = [];
+                if(freq === 'mingguan') {
+                    selectedDays = Array.from(document.querySelectorAll('input[name="act-days"]:checked')).map(el => parseInt(el.value));
+                    if(selectedDays.length === 0) {
+                        return showToast('Harap pilih minimal 1 hari untuk jadwal mingguan!', 'warning');
+                    }
+                }
+
+                const photoInput = document.getElementById('act-photo');
+                const btnSubmitActivity = document.getElementById('btn-submit-activity');
+
+                if (freq === 'sekali' && (status === 'Selesai' || status === 'Belum Selesai')) {
+                    const file = photoInput.files[0];
+                    if (!file) return showToast('Pilih foto/video bukti terlebih dahulu!', 'warning');
+                    
+                    let captionHeader = '';
+                    let reasonText = '';
+
+                    if (status === 'Selesai') {
+                        captionHeader = '✅ *TUGAS SELESAI*';
+                    } else if (status === 'Belum Selesai') {
+                        captionHeader = '⚠️ *TUGAS BELUM SELESAI*';
+                        reasonText = `\n❗️ *Alasan:* ${reason}`;
+                    }
+
+                    const caption = `${captionHeader}\n\n📋 *Jobdesk:* ${jdData ? jdData.title : 'Umum'}\n📝 *Aktivitas:* ${task}\nℹ️ *Deskripsi:* ${desc || '-'}\n📸 *Bukti:* ${proofDesc || '-'}${reasonText}\n📅 *Tanggal:* ${date}`;
+
+                    btnSubmitActivity.disabled = true;
+                    btnSubmitActivity.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim...';
+                    lucide.createIcons();
+
+                    try {
+                        await sendToTelegram(file, caption);
+                        showToast('Bukti berhasil dikirim ke Telegram!', 'success');
+                    } catch (err) {
+                        btnSubmitActivity.disabled = false;
+                        btnSubmitActivity.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Jadwalkan Aktivitas';
+                        lucide.createIcons();
+                        return showToast(err.message, 'error');
+                    }
+                }
+
+                const [sYear, sMonth, sDay] = date.split('-').map(Number);
+                const startDate = new Date(sYear, sMonth - 1, sDay);
+                const endDate = new Date(startDate);
+                endDate.setMonth(endDate.getMonth() + 6); 
+                
+                let datesToCreate = [];
+
+                if (freq === 'sekali') {
+                    datesToCreate.push(date);
+                } else {
+                    let curr = new Date(startDate);
+                    while(curr <= endDate) {
+                        const yyyy = curr.getFullYear();
+                        const mm = String(curr.getMonth() + 1).padStart(2, '0');
+                        const dd = String(curr.getDate()).padStart(2, '0');
+                        const dateStr = `${yyyy}-${mm}-${dd}`;
+
+                        if (freq === 'harian') {
+                            datesToCreate.push(dateStr);
+                        } else if (freq === 'mingguan') {
+                            if (selectedDays.includes(curr.getDay())) {
+                                datesToCreate.push(dateStr);
+                            }
+                        } else if (freq === 'bulanan') {
+                            if (curr.getDate() === startDate.getDate()) {
+                                datesToCreate.push(dateStr);
+                            }
+                        }
+                        curr.setDate(curr.getDate() + 1);
+                    }
+                }
 
                 btnSubmitActivity.disabled = true;
-                btnSubmitActivity.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim...';
+                btnSubmitActivity.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Menyimpan...';
                 lucide.createIcons();
 
                 try {
-                    await sendToTelegram(file, caption);
-                    showToast('Bukti berhasil dikirim ke Telegram!', 'success');
+                    const batch = writeBatch(db);
+                    const actColRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
+                    
+                    datesToCreate.forEach(dStr => {
+                        const newDocRef = doc(actColRef);
+                        batch.set(newDocRef, {
+                            date: dStr,
+                            jobdeskId: jobdeskId,
+                            jobdeskTitle: jdData ? jdData.title : 'Jobdesk Terhapus',
+                            task: task,
+                            desc: desc,
+                            proofDesc: proofDesc,
+                            status: status,
+                            reason: status === 'Belum Selesai' ? reason : '',
+                            createdAt: Date.now()
+                        });
+                    });
+
+                    await batch.commit();
+                    
+                    document.getElementById('act-task').value = ''; 
+                    document.getElementById('act-desc').value = ''; 
+                    document.getElementById('act-proof-desc').value = ''; 
+                    const actReasonEl = document.getElementById('act-reason');
+                    if (actReasonEl) actReasonEl.value = '';
+                    
+                    if (photoInput) photoInput.value = '';
+                    
+                    const mediaPreview = document.getElementById('act-media-preview');
+                    if (mediaPreview) {
+                        mediaPreview.innerHTML = '';
+                        mediaPreview.classList.add('hidden');
+                    }
+
+                    document.querySelectorAll('input[name="act-status"]').forEach(r => r.checked = false);
+                    const photoGroup = document.getElementById('photo-upload-group');
+                    if (photoGroup) photoGroup.classList.add('hidden');
+                    const reasonGroup = document.getElementById('reason-group');
+                    if (reasonGroup) reasonGroup.classList.add('hidden');
+                    
+                    if(freq === 'sekali') {
+                        showToast('Aktivitas berhasil dicatat!', 'success');
+                    } else {
+                        showToast('Jadwal rutin berhasil ditambahkan ke kalender!', 'success');
+                    }
                 } catch (err) {
+                    showToast(err.message, 'error');
+                } finally {
                     btnSubmitActivity.disabled = false;
                     btnSubmitActivity.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Jadwalkan Aktivitas';
                     lucide.createIcons();
-                    return showToast(err.message, 'error');
                 }
-            }
-
-            const [sYear, sMonth, sDay] = date.split('-').map(Number);
-            const startDate = new Date(sYear, sMonth - 1, sDay);
-            const endDate = new Date(startDate);
-            endDate.setMonth(endDate.getMonth() + 6); 
-            
-            let datesToCreate = [];
-
-            if (freq === 'sekali') {
-                datesToCreate.push(date);
-            } else {
-                let curr = new Date(startDate);
-                while(curr <= endDate) {
-                    const yyyy = curr.getFullYear();
-                    const mm = String(curr.getMonth() + 1).padStart(2, '0');
-                    const dd = String(curr.getDate()).padStart(2, '0');
-                    const dateStr = `${yyyy}-${mm}-${dd}`;
-
-                    if (freq === 'harian') {
-                        datesToCreate.push(dateStr);
-                    } else if (freq === 'mingguan') {
-                        if (selectedDays.includes(curr.getDay())) {
-                            datesToCreate.push(dateStr);
-                        }
-                    } else if (freq === 'bulanan') {
-                        if (curr.getDate() === startDate.getDate()) {
-                            datesToCreate.push(dateStr);
-                        }
-                    }
-                    curr.setDate(curr.getDate() + 1);
-                }
-            }
-
-            btnSubmitActivity.disabled = true;
-            btnSubmitActivity.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Menyimpan...';
-            lucide.createIcons();
-
-            try {
-                const batch = writeBatch(db);
-                const actColRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
-                
-                datesToCreate.forEach(dStr => {
-                    const newDocRef = doc(actColRef);
-                    batch.set(newDocRef, {
-                        date: dStr,
-                        jobdeskId: jobdeskId,
-                        jobdeskTitle: jdData ? jdData.title : 'Jobdesk Terhapus',
-                        task: task,
-                        desc: desc,
-                        proofDesc: proofDesc,
-                        status: status,
-                        createdAt: Date.now()
-                    });
-                });
-
-                await batch.commit();
-                
-                document.getElementById('act-task').value = ''; 
-                document.getElementById('act-desc').value = ''; 
-                document.getElementById('act-proof-desc').value = ''; 
-                photoInput.value = '';
-                document.getElementById('act-media-preview').innerHTML = '';
-                document.getElementById('act-media-preview').classList.add('hidden');
-                
-                if(freq === 'sekali') {
-                    if(status === 'Belum Selesai') showToast('Aktivitas berhasil dicatat!', 'success');
-                } else {
-                    showToast('Jadwal rutin berhasil ditambahkan ke kalender!', 'success');
-                }
-            } catch (err) {
-                showToast(err.message, 'error');
-            } finally {
-                btnSubmitActivity.disabled = false;
-                btnSubmitActivity.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Jadwalkan Aktivitas';
-                lucide.createIcons();
-            }
-        });
+            });
+        }
 
         window.deleteActivity = async function(id) {
             if (!currentUser || !db) return;
@@ -1408,27 +1552,34 @@ service cloud.firestore {<br>
         window.openConfirmModal = function(type, id, message) {
             deleteTargetType = type;
             deleteTargetId = id;
-            document.getElementById('modal-confirm-message').textContent = message;
+            
+            const msgEl = document.getElementById('modal-confirm-message');
+            if (msgEl) msgEl.textContent = message;
             
             const modal = document.getElementById('modal-confirm');
             const content = document.getElementById('modal-confirm-content');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                content.classList.remove('scale-95');
-            }, 10);
+            
+            if (modal && content) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-95');
+                }, 10);
+            }
         };
 
         window.closeConfirmModal = function() {
             const modal = document.getElementById('modal-confirm');
             const content = document.getElementById('modal-confirm-content');
-            modal.classList.add('opacity-0');
-            content.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                deleteTargetId = null;
-                deleteTargetType = null;
-            }, 300);
+            if (modal && content) {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    deleteTargetId = null;
+                    deleteTargetType = null;
+                }, 300);
+            }
         };
 
         window.executeDelete = async function() {
@@ -1484,34 +1635,60 @@ service cloud.firestore {<br>
             const act = activities.find(a => a.id === id);
             if(!act) return;
             
-            document.getElementById('detail-task').textContent = act.task;
-            document.getElementById('detail-desc').textContent = act.desc || 'Tidak ada deskripsi.';
-            document.getElementById('detail-proof-desc').textContent = act.proofDesc || 'Tidak ada keterangan bukti khusus.';
+            const taskEl = document.getElementById('detail-task');
+            if (taskEl) taskEl.textContent = act.task;
+            
+            const descEl = document.getElementById('detail-desc');
+            if (descEl) descEl.textContent = act.desc || 'Tidak ada deskripsi.';
+            
+            const proofEl = document.getElementById('detail-proof-desc');
+            if (proofEl) proofEl.textContent = act.proofDesc || 'Tidak ada keterangan bukti khusus.';
+
+            const reasonWrapperEl = document.getElementById('detail-reason-wrapper');
+            const reasonEl = document.getElementById('detail-reason');
+            if (reasonWrapperEl && reasonEl) {
+                if (act.status === 'Belum Selesai' && act.reason) {
+                    reasonEl.textContent = act.reason;
+                    reasonWrapperEl.classList.remove('hidden');
+                } else {
+                    reasonWrapperEl.classList.add('hidden');
+                    reasonEl.textContent = '-';
+                }
+            }
 
             const modal = document.getElementById('modal-activity-detail');
             const content = document.getElementById('modal-activity-detail-content');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                content.classList.remove('scale-95');
-            }, 10);
+            
+            if (modal && content) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-95');
+                }, 10);
+            }
         };
 
         window.closeActivityDetailModal = function() {
             const modal = document.getElementById('modal-activity-detail');
             const content = document.getElementById('modal-activity-detail-content');
-            modal.classList.add('opacity-0');
-            content.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
+            
+            if (modal && content) {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
         };
 
-        function openTelegramModal(activity) {
+        window.openTelegramModal = function(activity) {
             pendingActivityIdForTelegram = activity.id;
             
-            document.getElementById('modal-task-name').textContent = activity.task;
-            document.getElementById('modal-req-proof').textContent = activity.proofDesc || 'Foto/Video dokumentasi aktivitas.';
+            const taskNameEl = document.getElementById('modal-task-name');
+            if (taskNameEl) taskNameEl.textContent = activity.task;
+            
+            const reqProofEl = document.getElementById('modal-req-proof');
+            if (reqProofEl) reqProofEl.textContent = activity.proofDesc || 'Foto/Video dokumentasi aktivitas.';
             
             const radios = document.querySelectorAll('input[name="modal-act-status"]');
             radios.forEach(r => {
@@ -1524,27 +1701,48 @@ service cloud.firestore {<br>
             const modal = document.getElementById('modal-telegram');
             const content = document.getElementById('modal-telegram-content');
             
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                content.classList.remove('scale-95');
-            }, 10);
+            if (modal && content) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-95');
+                }, 10);
+            } else {
+                console.error("Elemen modal-telegram tidak ditemukan di DOM!");
+            }
         }
 
         window.closeTelegramModal = function() {
             const modal = document.getElementById('modal-telegram');
             const content = document.getElementById('modal-telegram-content');
             
-            modal.classList.add('opacity-0');
-            content.classList.add('scale-95');
-            
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                document.getElementById('modal-photo').value = '';
-                document.getElementById('modal-media-preview').innerHTML = '';
-                document.getElementById('modal-media-preview').classList.add('hidden');
-                pendingActivityIdForTelegram = null;
-            }, 300);
+            if (modal && content) {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-95');
+                
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    
+                    const photoInput = document.getElementById('modal-photo');
+                    if (photoInput) photoInput.value = '';
+                    
+                    const reasonInput = document.getElementById('modal-reason');
+                    if (reasonInput) reasonInput.value = '';
+
+                    const mediaPreview = document.getElementById('modal-media-preview');
+                    if (mediaPreview) {
+                        mediaPreview.innerHTML = '';
+                        mediaPreview.classList.add('hidden');
+                    }
+                    
+                    document.querySelectorAll('input[name="modal-act-status"]').forEach(r => r.checked = false);
+                    
+                    const uploadSection = document.getElementById('modal-upload-section');
+                    if (uploadSection) uploadSection.classList.add('hidden');
+                    
+                    pendingActivityIdForTelegram = null;
+                }, 300);
+            }
         };
 
         window.submitTelegramModal = async function() {
@@ -1553,11 +1751,23 @@ service cloud.firestore {<br>
             const act = activities.find(a => a.id === pendingActivityIdForTelegram);
             if (!act) return;
 
-            const newStatus = document.querySelector('input[name="modal-act-status"]:checked').value;
+            const checkedStatusNode = document.querySelector('input[name="modal-act-status"]:checked');
+            if (!checkedStatusNode) return showToast('Pilih status baru terlebih dahulu!', 'warning');
+            
+            const newStatus = checkedStatusNode.value;
 
             if (newStatus === act.status) {
                 closeTelegramModal();
                 return;
+            }
+
+            let reason = '';
+            if (newStatus === 'Belum Selesai') {
+                const reasonInput = document.getElementById('modal-reason');
+                if (reasonInput) {
+                    reason = reasonInput.value.trim();
+                    if (!reason) return showToast('Harap masukkan alasan belum selesai!', 'warning');
+                }
             }
 
             const btnSubmit = document.getElementById('btn-modal-submit');
@@ -1566,21 +1776,31 @@ service cloud.firestore {<br>
             lucide.createIcons();
 
             try {
-                if (newStatus === 'Selesai' || newStatus === 'Sedang Proses') {
+                if (newStatus === 'Selesai' || newStatus === 'Belum Selesai') {
                     const fileInput = document.getElementById('modal-photo');
-                    const file = fileInput.files[0];
+                    const file = fileInput ? fileInput.files[0] : null;
 
                     if (!file) throw new Error('Harap pilih foto/video bukti terlebih dahulu!');
 
-                    const captionHeader = newStatus === 'Selesai' ? '✅ *TUGAS SELESAI*' : '⏳ *TUGAS SEDANG DIPROSES*';
-                    const caption = `${captionHeader}\n\n📋 *Jobdesk:* ${act.jobdeskTitle}\n📝 *Aktivitas:* ${act.task}\nℹ️ *Deskripsi:* ${act.desc || '-'}\n📸 *Bukti:* ${act.proofDesc || '-'}\n📅 *Tanggal:* ${act.date}`;
+                    let captionHeader = '';
+                    let reasonText = '';
+
+                    if (newStatus === 'Selesai') {
+                        captionHeader = '✅ *TUGAS SELESAI*';
+                    } else if (newStatus === 'Belum Selesai') {
+                        captionHeader = '⚠️ *TUGAS BELUM SELESAI*';
+                        reasonText = `\n❗️ *Alasan:* ${reason}`;
+                    }
+
+                    const caption = `${captionHeader}\n\n📋 *Jobdesk:* ${act.jobdeskTitle}\n📝 *Aktivitas:* ${act.task}\nℹ️ *Deskripsi:* ${act.desc || '-'}\n📸 *Bukti:* ${act.proofDesc || '-'}${reasonText}\n📅 *Tanggal:* ${act.date}`;
 
                     btnSubmit.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim...';
                     await sendToTelegram(file, caption);
                 }
                 
                 await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activities', act.id), {
-                    status: newStatus
+                    status: newStatus,
+                    reason: newStatus === 'Belum Selesai' ? reason : ''
                 });
                 
                 showToast(`Status aktivitas berhasil diperbarui menjadi "${newStatus}"!`, 'success');
@@ -1596,8 +1816,13 @@ service cloud.firestore {<br>
 
         function renderActivities() {
             const tbody = document.getElementById('list-activity');
-            const filterDate = document.getElementById('filter-date') ? document.getElementById('filter-date').value : '';
-            const filterJobdesk = document.getElementById('filter-jobdesk') ? document.getElementById('filter-jobdesk').value : 'all';
+            if(!tbody) return;
+
+            const filterDateEl = document.getElementById('filter-date');
+            const filterJobdeskEl = document.getElementById('filter-jobdesk');
+
+            const filterDate = filterDateEl ? filterDateEl.value : '';
+            const filterJobdesk = filterJobdeskEl ? filterJobdeskEl.value : 'all';
 
             let filteredActivities = activities;
             if (filterDate) {
@@ -1616,10 +1841,12 @@ service cloud.firestore {<br>
                 let statusBadge = '';
                 if (act.status === 'Selesai') {
                     statusBadge = `<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-not-allowed" title="Tugas selesai dan tidak dapat diubah"><i data-lucide="lock" class="w-3 h-3"></i> Selesai</span>`;
-                } else if (act.status === 'Sedang Proses') {
-                    statusBadge = `<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold cursor-pointer hover:bg-blue-200 transition-colors" title="Ubah Status" onclick="toggleActivityStatus('${act.id}')">Sedang Proses</span>`;
+                } else if (act.status === 'Tidak Dikerjakan') {
+                    statusBadge = `<span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-pointer hover:bg-red-200 transition-colors" title="Ubah Status" onclick="window.toggleActivityStatus('${act.id}')">Tidak Dikerjakan <i data-lucide="edit-2" class="w-3 h-3"></i></span>`;
+                } else if (act.status === 'Belum Selesai') {
+                    statusBadge = `<span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-pointer hover:bg-amber-200 transition-colors" title="Ubah Status" onclick="window.toggleActivityStatus('${act.id}')">Belum Selesai <i data-lucide="edit-2" class="w-3 h-3"></i></span>`;
                 } else {
-                    statusBadge = `<span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold cursor-pointer hover:bg-amber-200 transition-colors" title="Ubah Status" onclick="toggleActivityStatus('${act.id}')">Belum Selesai</span>`;
+                    statusBadge = `<span class="px-2 py-1 bg-slate-100 text-slate-700 border border-slate-300 rounded-full text-xs font-semibold flex items-center gap-1 w-max cursor-pointer hover:bg-slate-200 transition-colors" title="Ubah Status" onclick="window.toggleActivityStatus('${act.id}')">Belum Input Progres <i data-lucide="edit-2" class="w-3 h-3"></i></span>`;
                 }
 
                 const dateObj = new Date(act.date);
@@ -1630,13 +1857,13 @@ service cloud.firestore {<br>
                         <td class="p-4 align-top whitespace-nowrap">${formattedDate}</td>
                         <td class="p-4 align-top font-medium text-indigo-700">${act.jobdeskTitle}</td>
                         <td class="p-4 align-top text-slate-800">
-                            <button onclick="openActivityDetailModal('${act.id}')" class="text-left hover:text-indigo-600 hover:underline font-medium focus:outline-none transition-colors">
+                            <button onclick="window.openActivityDetailModal('${act.id}')" class="text-left hover:text-indigo-600 hover:underline font-medium focus:outline-none transition-colors">
                                 ${act.task}
                             </button>
                         </td>
                         <td class="p-4 align-top whitespace-nowrap">${statusBadge}</td>
                         <td class="p-4 align-top text-right whitespace-nowrap">
-                            <button onclick="confirmDeleteActivity('${act.id}')" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                            <button onclick="window.confirmDeleteActivity('${act.id}')" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </td>
@@ -1650,6 +1877,8 @@ service cloud.firestore {<br>
         // ================= WADAH NOTIFIKASI TOAST =================
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
+            if(!container) return;
+
             const toast = document.createElement('div');
             
             let bgClass = 'bg-slate-800';
