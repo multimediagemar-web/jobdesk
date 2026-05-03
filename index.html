@@ -23,7 +23,7 @@
         }
     </style>
     <script>
-        // Mendefinisikan fungsi global awal untuk mencegah ralat ReferenceError saat modul (Firebase) sedang dimuat
+        // Mendefinisikan fungsi global awal untuk mencegah error saat modul dimuat
         window.switchTab = function() { console.warn("Modul sedang dimuat, harap tunggu..."); };
         window.changeMonth = function() {};
         window.selectCalendarDate = function() {};
@@ -41,303 +41,402 @@
         window.closeEditJobdeskModal = function() {};
         window.resetFilters = function() {};
         window.toggleActivityStatus = function() {};
+        window.saveSetupConfig = function() {};
+        window.handleLogin = function() {};
+        window.handleRegister = function() {};
+        window.handleLogout = function() {};
     </script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
 
-    <!-- Navbar -->
-    <nav class="bg-indigo-600 text-white shadow-md">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="briefcase" class="w-6 h-6"></i>
-                    <span class="font-bold text-xl tracking-tight">WorkLog</span>
-                </div>
-                <div class="flex space-x-2 sm:space-x-4 overflow-x-auto scrollbar-hide">
-                    <button onclick="switchTab('jobdesk')" id="nav-jobdesk" class="px-3 py-2 rounded-md text-sm font-medium bg-indigo-700 transition-colors whitespace-nowrap">Jobdesk</button>
-                    <button onclick="switchTab('activity')" id="nav-activity" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 transition-colors whitespace-nowrap">Aktivitas Harian</button>
-                    <button onclick="switchTab('calendar')" id="nav-calendar" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 transition-colors whitespace-nowrap">Kalender</button>
-                    <button onclick="switchTab('settings')" id="nav-settings" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 transition-colors whitespace-nowrap flex items-center gap-1">
-                        <i data-lucide="settings" class="w-4 h-4"></i> Pengaturan
-                    </button>
-                </div>
+    <!-- ================= SCREEN SETUP FIREBASE ================= -->
+    <div id="setup-screen" class="min-h-screen flex items-center justify-center p-4 bg-indigo-50 hidden">
+        <div class="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full">
+            <div class="flex items-center gap-3 mb-6 text-indigo-700">
+                <i data-lucide="database" class="w-8 h-8"></i>
+                <h2 class="text-2xl font-bold">Setup Database</h2>
+            </div>
+            <p class="text-sm text-slate-600 mb-4">Aplikasi ini membutuhkan Firebase Anda sendiri. Silakan tempelkan objek konfigurasi (firebaseConfig) dari Firebase Console Anda di bawah ini:</p>
+            <textarea id="setup-config-input" rows="8" class="w-full p-4 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 mb-4">{
+  apiKey: "AIzaSyAZ_yDvsEctMCP9zSxWSJ51zUoyHrd5kTk",
+  authDomain: "jobdesk-6e7bf.firebaseapp.com",
+  projectId: "jobdesk-6e7bf",
+  storageBucket: "jobdesk-6e7bf.firebasestorage.app",
+  messagingSenderId: "684483553202",
+  appId: "1:684483553202:web:1158fa07ca36bf6c46a6ab"
+}</textarea>
+            <button onclick="saveSetupConfig()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition-colors">Simpan & Lanjutkan</button>
+            
+            <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                <strong class="text-sm block mb-1">⚠️ SANGAT PENTING: Mencegah Error Permission</strong>
+                Agar aplikasi bisa login dan menyimpan data, buka Firebase Console Anda lalu:<br>
+                1. Ke menu <strong>Authentication</strong> > Sign-in method > Aktifkan <strong>Email/Password</strong>.<br>
+                2. Ke menu <strong>Firestore Database</strong> > tab <strong>Rules</strong>.<br>
+                Ubah aturannya (rules) menjadi persis seperti ini, lalu klik Publish:
+                <code class="block bg-white border border-red-200 p-2 mt-2 rounded font-mono text-[11px]">
+rules_version = '2';<br>
+service cloud.firestore {<br>
+&nbsp;&nbsp;match /databases/{database}/documents {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;match /{document=**} {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow read, write: if request.auth != null;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}<br>
+}
+                </code>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <!-- Konten Utama -->
-    <main class="flex-grow w-full max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
-        
-        <!-- ================= TAB JOBDESK ================= -->
-        <div id="tab-jobdesk" class="space-y-6">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-indigo-700">
-                    <i data-lucide="clipboard-list" class="w-5 h-5"></i> Tambah Jobdesk Baru
-                </h2>
-                <form id="form-jobdesk" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Peran / Jobdesk</label>
-                        <input type="text" id="jd-title" required placeholder="Contoh: Pakar Media Sosial" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+    <!-- ================= SCREEN AUTENTIKASI ================= -->
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 bg-slate-100 hidden">
+        <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
+            <div class="flex justify-center mb-6 text-indigo-600">
+                <i data-lucide="shield-check" class="w-12 h-12"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-center text-slate-800 mb-6">Login Akun</h2>
+            <form id="auth-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <input type="email" id="auth-email" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                    <input type="password" id="auth-password" required minlength="6" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <button type="submit" id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition-colors flex justify-center items-center gap-2">
+                    <i data-lucide="log-in" class="w-5 h-5"></i> Masuk
+                </button>
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink-0 mx-4 text-slate-400 text-sm">atau</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+                <button type="button" onclick="handleRegister()" id="btn-register" class="w-full bg-slate-100 hover:bg-slate-200 text-indigo-700 font-medium py-3 rounded-lg transition-colors flex justify-center items-center gap-2">
+                    <i data-lucide="user-plus" class="w-5 h-5"></i> Daftar Akun Baru
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= APLIKASI UTAMA ================= -->
+    <div id="main-app" class="flex-grow flex flex-col hidden">
+        <!-- Navbar -->
+        <nav class="bg-indigo-600 text-white shadow-md">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="briefcase" class="w-6 h-6"></i>
+                        <span class="font-bold text-xl tracking-tight">WorkLog</span>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Deskripsi Tanggung Jawab</label>
-                        <textarea id="jd-desc" required rows="3" placeholder="Jelaskan secara singkat tanggung jawab utama pada peran ini..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"></textarea>
-                    </div>
-                    <div class="flex justify-end">
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
-                            <i data-lucide="plus-circle" class="w-4 h-4"></i> Simpan Jobdesk
+                    <div class="flex space-x-2 sm:space-x-4 overflow-x-auto scrollbar-hide">
+                        <button onclick="switchTab('jobdesk')" id="nav-jobdesk" class="px-3 py-2 rounded-md text-sm font-medium bg-indigo-700 transition-colors whitespace-nowrap">Jobdesk</button>
+                        <button onclick="switchTab('activity')" id="nav-activity" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 transition-colors whitespace-nowrap">Aktivitas</button>
+                        <button onclick="switchTab('calendar')" id="nav-calendar" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 transition-colors whitespace-nowrap">Kalender</button>
+                        <button onclick="switchTab('settings')" id="nav-settings" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 transition-colors whitespace-nowrap flex items-center gap-1">
+                            <i data-lucide="settings" class="w-4 h-4"></i> Pengaturan
                         </button>
                     </div>
-                </form>
+                </div>
             </div>
+        </nav>
 
-            <div>
-                <h3 class="text-lg font-semibold mb-3 text-slate-700">Daftar Jobdesk Anda</h3>
-                <div id="list-jobdesk" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="col-span-full text-center py-8 text-slate-500 bg-white rounded-xl border border-slate-200 border-dashed">
-                        Belum ada jobdesk yang ditambahkan.
+        <!-- Konten Utama -->
+        <main class="flex-grow w-full max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
+            
+            <!-- ================= TAB JOBDESK ================= -->
+            <div id="tab-jobdesk" class="space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-indigo-700">
+                        <i data-lucide="clipboard-list" class="w-5 h-5"></i> Tambah Jobdesk Baru
+                    </h2>
+                    <form id="form-jobdesk" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Nama Peran / Jobdesk</label>
+                            <input type="text" id="jd-title" required placeholder="Contoh: Pakar Media Sosial" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Deskripsi Tanggung Jawab</label>
+                            <textarea id="jd-desc" required rows="3" placeholder="Jelaskan secara singkat tanggung jawab utama pada peran ini..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                                <i data-lucide="plus-circle" class="w-4 h-4"></i> Simpan Jobdesk
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-slate-700">Daftar Jobdesk Anda</h3>
+                    <div id="list-jobdesk" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="col-span-full text-center py-8 text-slate-500 bg-white rounded-xl border border-slate-200 border-dashed">
+                            Belum ada jobdesk yang ditambahkan.
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ================= TAB AKTIVITAS ================= -->
-        <div id="tab-activity" class="space-y-6 hidden">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-emerald-600">
-                    <i data-lucide="calendar-check" class="w-5 h-5"></i> Catat Aktivitas Harian / Rutin
-                </h2>
-                <form id="form-activity" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Mulai Tanggal</label>
-                            <input type="date" id="act-date" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Frekuensi Aktivitas</label>
-                            <select id="act-freq" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white">
-                                <option value="sekali">Sekali Saja</option>
-                                <option value="harian">Harian (Setiap Hari)</option>
-                                <option value="mingguan">Mingguan (Pilih Hari)</option>
-                                <option value="bulanan">Bulanan (Tanggal Sama Setiap Bulan)</option>
-                            </select>
-                        </div>
-                        
-                        <!-- Pilihan Hari Khusus Mingguan -->
-                        <div id="freq-mingguan-options" class="hidden col-span-full p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-                            <label class="block text-sm font-medium text-emerald-800 mb-2">Pilih Hari Rutin (Mingguan)</label>
-                            <div class="flex flex-wrap gap-4">
-                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="1" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Sen</label>
-                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="2" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Sel</label>
-                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="3" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Rab</label>
-                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="4" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Kam</label>
-                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="5" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Jum</label>
-                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="6" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Sab</label>
-                                <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="0" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Min</label>
+            <!-- ================= TAB AKTIVITAS ================= -->
+            <div id="tab-activity" class="space-y-6 hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-emerald-600">
+                        <i data-lucide="calendar-check" class="w-5 h-5"></i> Catat Aktivitas Harian / Rutin
+                    </h2>
+                    <form id="form-activity" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Mulai Tanggal</label>
+                                <input type="date" id="act-date" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Frekuensi Aktivitas</label>
+                                <select id="act-freq" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white">
+                                    <option value="sekali">Sekali Saja</option>
+                                    <option value="harian">Harian (Setiap Hari)</option>
+                                    <option value="mingguan">Mingguan (Pilih Hari)</option>
+                                    <option value="bulanan">Bulanan (Tanggal Sama Setiap Bulan)</option>
+                                </select>
+                            </div>
+                            
+                            <div id="freq-mingguan-options" class="hidden col-span-full p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                                <label class="block text-sm font-medium text-emerald-800 mb-2">Pilih Hari Rutin (Mingguan)</label>
+                                <div class="flex flex-wrap gap-4">
+                                    <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="1" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Sen</label>
+                                    <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="2" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Sel</label>
+                                    <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="3" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Rab</label>
+                                    <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="4" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Kam</label>
+                                    <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="5" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Jum</label>
+                                    <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="6" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Sab</label>
+                                    <label class="flex items-center gap-1 cursor-pointer text-sm font-medium text-emerald-700"><input type="checkbox" name="act-days" value="0" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 rounded"> Min</label>
+                                </div>
+                            </div>
+
+                            <div class="col-span-full">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Terkait Jobdesk</label>
+                                <select id="act-jobdesk" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white">
+                                    <option value="" disabled selected>Pilih Jobdesk...</option>
+                                </select>
                             </div>
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Aktivitas / Tugas yang Dikerjakan</label>
+                            <input type="text" id="act-task" required placeholder="Contoh: Membuat desain konten untuk Instagram" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Deskripsi Aktivitas</label>
+                            <textarea id="act-desc" rows="2" placeholder="Jelaskan detail aktivitas ini (opsional)..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Keterangan Bukti Laporan</label>
+                            <input type="text" id="act-proof-desc" placeholder="Contoh: Foto struk bensin dan odometer" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+                        </div>
+                        
+                        <div id="status-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Status Penyelesaian (Hanya untuk opsi "Sekali Saja")</label>
+                            <div class="flex gap-4 mt-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="act-status" value="Belum Selesai" class="text-emerald-600 focus:ring-emerald-500" checked>
+                                    <span class="text-sm">Belum Selesai</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="act-status" value="Sedang Proses" class="text-blue-600 focus:ring-blue-500">
+                                    <span class="text-sm">Sedang Proses</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="act-status" value="Selesai" class="text-emerald-600 focus:ring-emerald-500">
+                                    <span class="text-sm">Selesai</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="photo-upload-group" class="hidden p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                            <label class="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
+                                <i data-lucide="file-up" class="w-4 h-4 text-emerald-600"></i> Unggah Bukti (Otomatis ke Telegram)
+                            </label>
+                            <input type="file" id="act-photo" accept="image/*,video/*" class="w-full mt-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all">
+                            <p class="text-xs text-slate-500 mt-2">Foto/Video wajib diunggah karena status ditandai "Sedang Proses" atau "Selesai" (Maksimum 50MB).</p>
+                            <div id="act-media-preview" class="hidden mt-3 rounded-lg overflow-hidden border border-slate-200 bg-black flex justify-center"></div>
+                        </div>
 
-                        <div class="col-span-full">
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Terkait Jobdesk</label>
-                            <select id="act-jobdesk" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white">
-                                <option value="" disabled selected>Pilih Jobdesk...</option>
+                        <div id="rutin-notice" class="hidden p-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg flex gap-2">
+                            <i data-lucide="info" class="w-5 h-5 flex-shrink-0"></i>
+                            <span>Aktivitas rutin akan dijadwalkan secara otomatis ke dalam Kalender dengan status awal "Belum Selesai". Anda dapat mengubah statusnya per tanggal di kalender.</span>
+                        </div>
+
+                        <div class="flex justify-end pt-2">
+                            <button type="submit" id="btn-submit-activity" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i> Jadwalkan Aktivitas
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-slate-700">Riwayat Semua Aktivitas</h3>
+                    
+                    <div class="mb-4 flex flex-col md:flex-row gap-4 items-end bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                        <div class="flex-1 w-full">
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Filter Tanggal</label>
+                            <input type="date" id="filter-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div class="flex-1 w-full">
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Filter Jobdesk</label>
+                            <select id="filter-jobdesk" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="all">Semua Jobdesk</option>
                             </select>
                         </div>
+                        <div>
+                            <button type="button" onclick="resetFilters()" class="w-full md:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="filter-x" class="w-4 h-4"></i> Reset
+                            </button>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Aktivitas / Tugas yang Dikerjakan</label>
-                        <input type="text" id="act-task" required placeholder="Contoh: Membuat desain konten untuk Instagram" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-sm text-slate-600">
+                                        <th class="p-4 font-semibold">Tanggal</th>
+                                        <th class="p-4 font-semibold">Jobdesk</th>
+                                        <th class="p-4 font-semibold">Aktivitas</th>
+                                        <th class="p-4 font-semibold">Status</th>
+                                        <th class="p-4 font-semibold text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="list-activity" class="divide-y divide-slate-200 text-sm">
+                                    <tr>
+                                        <td colspan="5" class="p-8 text-center text-slate-500">Belum ada aktivitas harian yang dicatat.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Deskripsi Aktivitas</label>
-                        <textarea id="act-desc" rows="2" placeholder="Jelaskan detail aktivitas ini (opsional)..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Keterangan Bukti Laporan</label>
-                        <input type="text" id="act-proof-desc" placeholder="Contoh: Foto struk bensin dan odometer" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
-                    </div>
-                    
-                    <div id="status-group">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Status Penyelesaian (Hanya untuk opsi "Sekali Saja")</label>
-                        <div class="flex gap-4 mt-2">
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="act-status" value="Belum Selesai" class="text-emerald-600 focus:ring-emerald-500" checked>
-                                <span class="text-sm">Belum Selesai</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="act-status" value="Sedang Proses" class="text-blue-600 focus:ring-blue-500">
-                                <span class="text-sm">Sedang Proses</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="act-status" value="Selesai" class="text-emerald-600 focus:ring-emerald-500">
-                                <span class="text-sm">Selesai</span>
-                            </label>
+                </div>
+            </div>
+
+            <!-- ================= TAB KALENDER ================= -->
+            <div id="tab-calendar" class="space-y-6 hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold text-indigo-700 flex items-center gap-2">
+                            <i data-lucide="calendar-days" class="w-5 h-5"></i> Kalender Aktivitas
+                        </h2>
+                        <div class="flex items-center gap-4 bg-slate-50 rounded-lg p-1 border border-slate-200">
+                            <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-200 rounded-md transition-colors"><i data-lucide="chevron-left" class="w-4 h-4 text-slate-600"></i></button>
+                            <span id="calendar-month-year" class="font-semibold text-slate-700 w-32 text-center text-sm">Bulan Tahun</span>
+                            <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-200 rounded-md transition-colors"><i data-lucide="chevron-right" class="w-4 h-4 text-slate-600"></i></button>
                         </div>
                     </div>
                     
-                    <!-- Form Unggah File -->
-                    <div id="photo-upload-group" class="hidden p-4 bg-slate-50 border border-slate-200 rounded-lg">
-                        <label class="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
-                            <i data-lucide="file-up" class="w-4 h-4 text-emerald-600"></i> Unggah Bukti (Otomatis ke Telegram)
-                        </label>
-                        <input type="file" id="act-photo" accept="image/*,video/*" class="w-full mt-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all">
-                        <p class="text-xs text-slate-500 mt-2">Foto/Video wajib diunggah karena status ditandai "Sedang Proses" atau "Selesai" (Maksimum 50MB).</p>
-                        <!-- Wadah Pratinjau Media -->
-                        <div id="act-media-preview" class="hidden mt-3 rounded-lg overflow-hidden border border-slate-200 bg-black flex justify-center"></div>
+                    <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                        <div class="text-xs font-semibold text-rose-500 py-2">Min</div>
+                        <div class="text-xs font-semibold text-slate-500 py-2">Sen</div>
+                        <div class="text-xs font-semibold text-slate-500 py-2">Sel</div>
+                        <div class="text-xs font-semibold text-slate-500 py-2">Rab</div>
+                        <div class="text-xs font-semibold text-slate-500 py-2">Kam</div>
+                        <div class="text-xs font-semibold text-slate-500 py-2">Jum</div>
+                        <div class="text-xs font-semibold text-slate-500 py-2">Sab</div>
                     </div>
-
-                    <div id="rutin-notice" class="hidden p-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg flex gap-2">
-                        <i data-lucide="info" class="w-5 h-5 flex-shrink-0"></i>
-                        <span>Aktivitas rutin akan dijadwalkan secara otomatis ke dalam Kalender dengan status awal "Belum Selesai". Anda dapat mengubah statusnya per tanggal di kalender.</span>
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1 md:gap-2">
                     </div>
-
-                    <div class="flex justify-end pt-2">
-                        <button type="submit" id="btn-submit-activity" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i data-lucide="check-circle" class="w-4 h-4"></i> Jadwalkan Aktivitas
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <div>
-                <h3 class="text-lg font-semibold mb-3 text-slate-700">Riwayat Semua Aktivitas</h3>
-                
-                <!-- Bagian Filter -->
-                <div class="mb-4 flex flex-col md:flex-row gap-4 items-end bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                    <div class="flex-1 w-full">
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Filter Tanggal</label>
-                        <input type="date" id="filter-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-                    <div class="flex-1 w-full">
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Filter Jobdesk</label>
-                        <select id="filter-jobdesk" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <option value="all">Semua Jobdesk</option>
-                            <!-- Pilihan disuntik via JS -->
-                        </select>
-                    </div>
-                    <div>
-                        <button type="button" onclick="resetFilters()" class="w-full md:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
-                            <i data-lucide="filter-x" class="w-4 h-4"></i> Reset
-                        </button>
+                    <div class="mt-4 flex gap-4 justify-end text-xs text-slate-500">
+                        <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-emerald-500"></div> Semua Selesai</div>
+                        <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-amber-500"></div> Ada Belum Selesai</div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-slate-700 flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i data-lucide="list-todo" class="w-5 h-5 text-indigo-500"></i> 
+                        Aktivitas pada: <span id="calendar-selected-date-text" class="text-indigo-600 font-bold ml-1">Pilih Tanggal</span>
+                    </h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-sm text-slate-600">
-                                    <th class="p-4 font-semibold">Tanggal</th>
-                                    <th class="p-4 font-semibold">Jobdesk</th>
-                                    <th class="p-4 font-semibold">Aktivitas</th>
-                                    <th class="p-4 font-semibold">Status</th>
-                                    <th class="p-4 font-semibold text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="list-activity" class="divide-y divide-slate-200 text-sm">
-                                <tr>
-                                    <td colspan="5" class="p-8 text-center text-slate-500">Belum ada aktivitas harian yang dicatat.</td>
-                                </tr>
+                            <tbody id="list-calendar-activity" class="divide-y divide-slate-100 text-sm">
+                                <tr><td colspan="3" class="p-8 text-center text-slate-500 bg-slate-50 rounded-lg">Pilih tanggal di kalender untuk melihat daftar aktivitas.</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ================= TAB KALENDER ================= -->
-        <div id="tab-calendar" class="space-y-6 hidden">
-            <!-- Grid Kalender -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-indigo-700 flex items-center gap-2">
-                        <i data-lucide="calendar-days" class="w-5 h-5"></i> Kalender Aktivitas
-                    </h2>
-                    <div class="flex items-center gap-4 bg-slate-50 rounded-lg p-1 border border-slate-200">
-                        <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-200 rounded-md transition-colors"><i data-lucide="chevron-left" class="w-4 h-4 text-slate-600"></i></button>
-                        <span id="calendar-month-year" class="font-semibold text-slate-700 w-32 text-center text-sm">Bulan Tahun</span>
-                        <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-200 rounded-md transition-colors"><i data-lucide="chevron-right" class="w-4 h-4 text-slate-600"></i></button>
-                    </div>
-                </div>
+            <!-- ================= TAB PENGATURAN ================= -->
+            <div id="tab-settings" class="space-y-6 hidden">
                 
-                <div class="grid grid-cols-7 gap-1 text-center mb-2">
-                    <div class="text-xs font-semibold text-rose-500 py-2">Min</div>
-                    <div class="text-xs font-semibold text-slate-500 py-2">Sen</div>
-                    <div class="text-xs font-semibold text-slate-500 py-2">Sel</div>
-                    <div class="text-xs font-semibold text-slate-500 py-2">Rab</div>
-                    <div class="text-xs font-semibold text-slate-500 py-2">Kam</div>
-                    <div class="text-xs font-semibold text-slate-500 py-2">Jum</div>
-                    <div class="text-xs font-semibold text-slate-500 py-2">Sab</div>
-                </div>
-                <div id="calendar-grid" class="grid grid-cols-7 gap-1 md:gap-2">
-                    <!-- Hari kalender akan disuntik via JS -->
-                </div>
-                <div class="mt-4 flex gap-4 justify-end text-xs text-slate-500">
-                    <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-emerald-500"></div> Semua Selesai</div>
-                    <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-amber-500"></div> Ada Belum Selesai</div>
-                </div>
-            </div>
-
-            <!-- Detail Aktivitas Tanggal Terpilih -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h3 class="text-lg font-semibold mb-4 text-slate-700 flex items-center gap-2 border-b border-slate-100 pb-3">
-                    <i data-lucide="list-todo" class="w-5 h-5 text-indigo-500"></i> 
-                    Aktivitas pada: <span id="calendar-selected-date-text" class="text-indigo-600 font-bold ml-1">Pilih Tanggal</span>
-                </h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <tbody id="list-calendar-activity" class="divide-y divide-slate-100 text-sm">
-                            <tr><td colspan="3" class="p-8 text-center text-slate-500 bg-slate-50 rounded-lg">Pilih tanggal di kalender untuk melihat daftar aktivitas.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- ================= TAB PENGATURAN ================= -->
-        <div id="tab-settings" class="space-y-6 hidden">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-slate-800">
-                    <i data-lucide="send" class="w-5 h-5 text-blue-500"></i> Pengaturan Bot Telegram
-                </h2>
-                <div class="mb-6 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
-                    <p class="mb-2"><strong>Cara Mengatur:</strong></p>
-                    <ul class="list-disc pl-5 space-y-1">
-                        <li>Buat bot melalui <strong>@BotFather</strong> di Telegram dan dapatkan <strong>Token Bot</strong> Anda.</li>
-                        <li>Masukkan bot tersebut ke dalam Grup Telegram Anda.</li>
-                        <li>Dapatkan <strong>Chat ID</strong> grup tersebut (biasanya diawali tanda minus, misal: <code class="bg-blue-100 px-1 rounded">-100123456789</code>).</li>
-                    </ul>
-                </div>
-                <form id="form-settings" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Token Bot Telegram</label>
-                        <input type="text" id="tg-token" value="8614464949:AAGt0GmOes7efeB7HqugsLjQNe9TBVwt6bI" placeholder="1234567890:ABCdefGhIJKlmNoPQRsTUVWxyz" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Chat ID (Grup/Pribadi)</label>
-                        <input type="text" id="tg-chatid" value="-5299037561" placeholder="-100xxxxxxxxx" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono text-sm">
-                    </div>
-                    <div class="flex justify-end pt-2">
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
-                            <i data-lucide="save" class="w-4 h-4"></i> Simpan Pengaturan
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold flex items-center gap-2 text-slate-800">
+                            <i data-lucide="user" class="w-5 h-5 text-indigo-500"></i> Profil Akun
+                        </h2>
+                        <button onclick="handleLogout()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                            <i data-lucide="log-out" class="w-4 h-4"></i> Keluar (Logout)
                         </button>
                     </div>
-                </form>
+                    <p class="text-sm text-slate-600 mb-2">Anda login sebagai: <strong id="user-email-display" class="text-indigo-700"></strong></p>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-slate-800">
+                        <i data-lucide="database" class="w-5 h-5 text-indigo-500"></i> Konfigurasi Firebase
+                    </h2>
+                    <form id="form-update-firebase" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Kode Konfigurasi</label>
+                            <textarea id="update-firebase-config" rows="6" class="w-full p-4 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 mb-4"></textarea>
+                        </div>
+                        <div class="flex justify-end pt-2">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i> Perbarui Firebase (Muat Ulang)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-slate-800">
+                        <i data-lucide="send" class="w-5 h-5 text-blue-500"></i> Pengaturan Bot Telegram
+                    </h2>
+                    <div class="mb-6 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
+                        <p class="mb-2"><strong>Cara Mengatur:</strong></p>
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li>Buat bot melalui <strong>@BotFather</strong> di Telegram dan dapatkan <strong>Token Bot</strong> Anda.</li>
+                            <li>Masukkan bot tersebut ke dalam Grup Telegram Anda.</li>
+                            <li>Dapatkan <strong>Chat ID</strong> grup tersebut (biasanya diawali tanda minus, misal: <code class="bg-blue-100 px-1 rounded">-100123456789</code>).</li>
+                        </ul>
+                    </div>
+                    <form id="form-settings" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Token Bot Telegram</label>
+                            <input type="text" id="tg-token" value="8614464949:AAGt0GmOes7efeB7HqugsLjQNe9TBVwt6bI" placeholder="1234567890:ABCdefGhIJKlmNoPQRsTUVWxyz" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Chat ID (Grup/Pribadi)</label>
+                            <input type="text" id="tg-chatid" value="-5299037561" placeholder="-100xxxxxxxxx" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono text-sm">
+                        </div>
+                        <div class="flex justify-end pt-2">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                                <i data-lucide="save" class="w-4 h-4"></i> Simpan Pengaturan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-red-50 rounded-xl shadow-sm border border-red-200 p-6 mt-6">
+                    <h2 class="text-xl font-semibold mb-2 flex items-center gap-2 text-red-700">
+                        <i data-lucide="alert-triangle" class="w-5 h-5"></i> Zona Berbahaya
+                    </h2>
+                    <p class="text-sm text-red-600 mb-4">Menghapus semua data (Jobdesk dan Aktivitas) milik akun Anda secara permanen. Tindakan ini tidak dapat dibatalkan.</p>
+                    <button onclick="confirmDeleteAll()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Semua Data
+                    </button>
+                </div>
             </div>
 
-            <div class="bg-red-50 rounded-xl shadow-sm border border-red-200 p-6 mt-6">
-                <h2 class="text-xl font-semibold mb-2 flex items-center gap-2 text-red-700">
-                    <i data-lucide="alert-triangle" class="w-5 h-5"></i> Zona Berbahaya
-                </h2>
-                <p class="text-sm text-red-600 mb-4">Menghapus semua data (Jobdesk dan Aktivitas) secara permanen. Tindakan ini tidak dapat dibatalkan.</p>
-                <button onclick="confirmDeleteAll()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Semua Data
-                </button>
-            </div>
-        </div>
+        </main>
+    </div> <!-- End Main App -->
 
-    </main>
-
+    <!-- ================= SEMUA MODAL ================= -->
     <!-- Modal Konfirmasi Hapus -->
     <div id="modal-confirm" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300" id="modal-confirm-content">
@@ -478,26 +577,13 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, deleteDoc, updateDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ========================================================
-        // 1. PENGATURAN FIREBASE (HANYA MENGGUNAKAN FIREBASE ANDA)
-        // ========================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyDx5dJBs-2YQkTEyEQ7kG_iDC_3zLyv8_E",
-            authDomain: "jobdesk-e611b.firebaseapp.com",
-            projectId: "jobdesk-e611b",
-            storageBucket: "jobdesk-e611b.firebasestorage.app",
-            messagingSenderId: "1049444292185",
-            appId: "1:1049444292185:web:4143449d5eef8c0910c348"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        
-        // Memaksa ID statik agar semua perangkat membaca folder yang sama persis
+        // Variabel Global Firebase
+        let app = null;
+        let auth = null;
+        let db = null;
         const appId = 'worklog-app'; 
         let currentUser = null;
 
@@ -505,8 +591,226 @@
         let jobdesks = [];
         let activities = [];
         let pendingActivityIdForTelegram = null;
+        
+        // Listener References untuk membersihkan data saat logout
+        let jdUnsubscribe = null;
+        let actUnsubscribe = null;
 
-        // State Kalender
+        lucide.createIcons();
+
+        // ================= PARSING FIREBASE CONFIG (SANGAT AMAN) =================
+        function parseConfigStr(str) {
+            const config = {};
+            // Array kunci yang wajib diekstrak
+            const keys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+            
+            for (const key of keys) {
+                // Regex untuk mencari key: "value" atau 'value' dengan/tanpa spasi/koma
+                const regex = new RegExp(`${key}\\s*:\\s*['"]([^'"]+)['"]`);
+                const match = str.match(regex);
+                if (match && match[1]) {
+                    config[key] = match[1];
+                }
+            }
+            
+            // Validasi jika apiKey dan projectId berhasil ditemukan
+            if (config.apiKey && config.projectId) {
+                return config;
+            }
+            return null;
+        }
+
+        // ================= INISIALISASI FIREBASE =================
+        function initFirebase(directConfig = null, rawStr = null) {
+            let config = directConfig;
+            let configStr = rawStr || localStorage.getItem('worklog_firebase_config');
+
+            if (!config) {
+                if (!configStr) {
+                    document.getElementById('setup-screen').classList.remove('hidden');
+                    return;
+                }
+                config = parseConfigStr(configStr);
+            }
+
+            if (!config || !config.apiKey) {
+                showToast("Konfigurasi Firebase tidak valid!", "error");
+                localStorage.removeItem('worklog_firebase_config');
+                document.getElementById('setup-screen').classList.remove('hidden');
+                return;
+            }
+
+            try {
+                // Hanya jalankan initializeApp jika app belum ada
+                if (!app) {
+                    app = initializeApp(config);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+                }
+
+                // Masukkan string kembali ke form pengaturan
+                document.getElementById('update-firebase-config').value = configStr || JSON.stringify(config, null, 2);
+
+                // Sembunyikan layar setup dengan aman tanpa reload halaman!
+                document.getElementById('setup-screen').classList.add('hidden');
+
+                // Dengarkan status akun (Login / Logout)
+                onAuthStateChanged(auth, user => {
+                    if (user) {
+                        currentUser = user;
+                        document.getElementById('user-email-display').textContent = user.email;
+                        
+                        document.getElementById('auth-screen').classList.add('hidden');
+                        document.getElementById('main-app').classList.remove('hidden');
+                        
+                        setupRealtimeListeners();
+                        switchTab('jobdesk'); // Default tab
+                    } else {
+                        currentUser = null;
+                        document.getElementById('main-app').classList.add('hidden');
+                        document.getElementById('auth-screen').classList.remove('hidden');
+                        
+                        // Bersihkan data lokal jika keluar
+                        if(jdUnsubscribe) jdUnsubscribe();
+                        if(actUnsubscribe) actUnsubscribe();
+                        jobdesks = [];
+                        activities = [];
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase Init Error:", error);
+                // Menampilkan error Firebase asli agar mudah dilacak
+                showToast("Gagal inisialisasi: " + error.message, "error");
+                document.getElementById('setup-screen').classList.remove('hidden');
+            }
+        }
+
+        // Jalankan fungsi saat web dibuka
+        initFirebase();
+
+        // ================= FUNGSI SETUP (TANPA RELOAD SCREEN PUTIH) =================
+        window.saveSetupConfig = function() {
+            const val = document.getElementById('setup-config-input').value.trim();
+            if(!val) return showToast("Harap isi konfigurasi terlebih dahulu!", "warning");
+            
+            const config = parseConfigStr(val);
+            if(!config || !config.apiKey) return showToast("Format konfigurasi gagal dibaca. Coba tempel ulang tanpa tambahan lain.", "error");
+
+            // Simpan dan inisialisasi TANPA me-reload halaman
+            localStorage.setItem('worklog_firebase_config', val);
+            initFirebase(config, val);
+        };
+
+        // Pembaruan Config di Menu Pengaturan (Boleh reload karena user sengaja ingin me-reset total)
+        document.getElementById('form-update-firebase').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const val = document.getElementById('update-firebase-config').value.trim();
+            if(!val) return;
+            localStorage.setItem('worklog_firebase_config', val);
+            showToast("Konfigurasi disimpan. Memuat ulang aplikasi...", "success");
+            setTimeout(() => window.location.reload(), 1000);
+        });
+
+        // ================= AUTENTIKASI (EMAIL / PASSWORD) =================
+        document.getElementById('auth-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            const btn = document.getElementById('btn-login');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Memproses...';
+            lucide.createIcons();
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showToast("Berhasil masuk!", "success");
+            } catch(err) {
+                let msg = err.message;
+                if(err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+                    msg = "Email atau Password salah, atau akun belum didaftarkan.";
+                }
+                showToast("Login gagal: " + msg, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="log-in" class="w-5 h-5"></i> Masuk';
+                lucide.createIcons();
+            }
+        });
+
+        window.handleRegister = async function() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            if(!email || !password || password.length < 6) {
+                return showToast("Harap isi email dan password (min. 6 karakter) untuk mendaftar.", "warning");
+            }
+
+            const btn = document.getElementById('btn-register');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mendaftar...';
+            lucide.createIcons();
+
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                showToast("Pendaftaran berhasil! Silakan nikmati aplikasi.", "success");
+            } catch(err) {
+                let msg = err.message;
+                if(err.code === 'auth/email-already-in-use') msg = "Email ini sudah terdaftar. Silakan langsung klik 'Masuk'.";
+                if(err.code === 'auth/operation-not-allowed') msg = "Fitur Email/Password belum diaktifkan di Firebase Anda! (Cek menu Authentication -> Sign In Method).";
+                showToast("Daftar gagal: " + msg, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="user-plus" class="w-5 h-5"></i> Daftar Akun Baru';
+                lucide.createIcons();
+            }
+        };
+
+        window.handleLogout = async function() {
+            if(!auth) return;
+            try {
+                await signOut(auth);
+                showToast("Berhasil keluar dari akun.", "info");
+            } catch(err) {
+                showToast("Gagal logout.", "error");
+            }
+        };
+
+        // ================= LISTENER FIREBASE REALTIME =================
+        function setupRealtimeListeners() {
+            if (!currentUser || !db) return;
+
+            // Menggunakan PATH Spesifik untuk Akun (Email) Ini Sendiri
+            const jdRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks');
+            jdUnsubscribe = onSnapshot(jdRef, (snapshot) => {
+                jobdesks = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                jobdesks.sort((a, b) => b.createdAt - a.createdAt); 
+                renderJobdesks();
+            }, (error) => {
+                console.error("Firestore Error (Jobdesk):", error);
+                if (error.code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')) {
+                    showToast("Akses Ditolak! Anda wajib mengubah 'Rules' Firestore di Firebase Console.", "error");
+                } else {
+                    showToast("Gagal memuat data Jobdesk.", "error");
+                }
+            });
+
+            const actRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
+            actUnsubscribe = onSnapshot(actRef, (snapshot) => {
+                activities = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                activities.sort((a, b) => new Date(b.date) - new Date(a.date)); 
+                renderActivities();
+                renderCalendar(); 
+            }, (error) => {
+                console.error("Firestore Error (Aktivitas):", error);
+                if (error.code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')) {
+                    showToast("Akses Ditolak! Anda wajib mengubah 'Rules' Firestore di Firebase Console.", "error");
+                } else {
+                    showToast("Gagal memuat data Aktivitas.", "error");
+                }
+            });
+        }
+
+        // ================= STATE DAN FUNGSI DEFAULT LAINNYA =================
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
         
@@ -519,8 +823,6 @@
         }
         let selectedDateForCalendar = getLocalYYYYMMDD(new Date());
 
-        // Inisialisasi ikon Lucide
-        lucide.createIcons();
         document.getElementById('act-date').value = selectedDateForCalendar;
         document.getElementById('filter-date').value = selectedDateForCalendar; 
 
@@ -531,57 +833,6 @@
         if (!localStorage.getItem('tg_chatid')) localStorage.setItem('tg_chatid', defaultChatId);
         document.getElementById('tg-token').value = localStorage.getItem('tg_token');
         document.getElementById('tg-chatid').value = localStorage.getItem('tg_chatid');
-
-        // ================= AUTENTIKASI (AUTHENTICATION) FIREBASE =================
-        const initAuth = async () => {
-            try {
-                // Hanya menggunakan login Tanpa Nama (Anonymous) untuk Firebase pribadi Anda
-                await signInAnonymously(auth);
-            } catch (err) {
-                console.error("Firebase Auth Error:", err);
-                showToast("Gagal terhubung ke database. Pastikan pengaturan Auth benar.", "error");
-            }
-        };
-
-        initAuth().then(() => {
-            onAuthStateChanged(auth, user => {
-                if (user) {
-                    currentUser = user;
-                    setupRealtimeListeners();
-                } else {
-                    currentUser = null;
-                }
-            });
-        });
-
-        // ================= LISTENER FIREBASE REALTIME =================
-        function setupRealtimeListeners() {
-            if (!currentUser) return;
-
-            // MENGGUNAKAN PATH "PUBLIC" (Semua perangkat akan melihat data yang sama)
-            const jdRef = collection(db, 'artifacts', appId, 'public', 'data', 'jobdesks');
-            onSnapshot(jdRef, (snapshot) => {
-                jobdesks = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                jobdesks.sort((a, b) => b.createdAt - a.createdAt); 
-                renderJobdesks();
-            }, (error) => {
-                console.error(error);
-                showToast("Gagal memuat data Jobdesk.", "error");
-            });
-
-            // MENGGUNAKAN PATH "PUBLIC"
-            const actRef = collection(db, 'artifacts', appId, 'public', 'data', 'activities');
-            onSnapshot(actRef, (snapshot) => {
-                activities = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                // Susun Menurun berdasarkan String Tanggal
-                activities.sort((a, b) => new Date(b.date) - new Date(a.date)); 
-                renderActivities();
-                renderCalendar(); 
-            }, (error) => {
-                console.error(error);
-                showToast("Gagal memuat data Aktivitas.", "error");
-            });
-        }
 
         // ================= NAVIGASI TAB =================
         window.switchTab = function(tabId) {
@@ -728,7 +979,6 @@
 
             let endpoint = 'sendPhoto';
             if (file.type.startsWith('video/')) {
-                // Mengubah sendVideo menjadi sendDocument untuk video
                 endpoint = 'sendDocument';
                 formData.append('document', file);
             } else {
@@ -774,7 +1024,7 @@
             handleMediaPreview(this, 'modal-media-preview');
         });
 
-        // ================= LOGIKA PENGATURAN =================
+        // ================= LOGIKA PENGATURAN (TELEGRAM) =================
         document.getElementById('form-settings').addEventListener('submit', function(e) {
             e.preventDefault();
             localStorage.setItem('tg_token', document.getElementById('tg-token').value.trim());
@@ -786,7 +1036,7 @@
         const formJobdesk = document.getElementById('form-jobdesk');
         formJobdesk.addEventListener('submit', async function(e) {
             e.preventDefault();
-            if (!currentUser) return showToast("Menunggu koneksi database...", "warning");
+            if (!currentUser || !db) return showToast("Menunggu koneksi database...", "warning");
 
             const title = document.getElementById('jd-title').value.trim();
             const desc = document.getElementById('jd-desc').value.trim();
@@ -795,7 +1045,7 @@
             if (title && desc) {
                 btnSubmit.disabled = true;
                 try {
-                    const jdRef = collection(db, 'artifacts', appId, 'public', 'data', 'jobdesks');
+                    const jdRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks');
                     await addDoc(jdRef, { title, desc, createdAt: Date.now() });
                     formJobdesk.reset();
                     showToast('Jobdesk berhasil ditambahkan!', 'success');
@@ -808,12 +1058,12 @@
         });
 
         window.deleteJobdesk = async function(id) {
-            if (!currentUser) return;
+            if (!currentUser || !db) return;
             const isUsed = activities.some(act => act.jobdeskId === id);
             if (isUsed) return showToast('Gagal: Jobdesk ini sedang digunakan pada riwayat aktivitas.', 'error');
             
             try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jobdesks', id));
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks', id));
                 showToast('Jobdesk dihapus.', 'info');
             } catch (error) {
                 showToast('Gagal menghapus jobdesk', 'error');
@@ -857,7 +1107,7 @@
         };
 
         window.submitEditJobdesk = async function() {
-            if (!currentUser || !editJobdeskId) return;
+            if (!currentUser || !db || !editJobdeskId) return;
             const title = document.getElementById('edit-jd-title').value.trim();
             const desc = document.getElementById('edit-jd-desc').value.trim();
             const btn = document.getElementById('btn-submit-edit-jd');
@@ -869,16 +1119,14 @@
             lucide.createIcons();
 
             try {
-                // Perbarui dokumen Jobdesk
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jobdesks', editJobdeskId), {
+                await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks', editJobdeskId), {
                     title: title,
                     desc: desc
                 });
                 
-                // Perbarui aktivitas yang terkait
                 const actsToUpdate = activities.filter(a => a.jobdeskId === editJobdeskId);
                 if (actsToUpdate.length > 0) {
-                    const actRef = collection(db, 'artifacts', appId, 'public', 'data', 'activities');
+                    const actRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
                     for (let i = 0; i < actsToUpdate.length; i += 400) {
                         const chunkBatch = writeBatch(db);
                         actsToUpdate.slice(i, i + 400).forEach(a => {
@@ -932,7 +1180,6 @@
         const photoInput = document.getElementById('act-photo');
         const btnSubmitActivity = document.getElementById('btn-submit-activity');
 
-        // Toggle Pilihan Frekuensi
         document.getElementById('act-freq').addEventListener('change', function(e) {
             const val = e.target.value;
             const weeklyGroup = document.getElementById('freq-mingguan-options');
@@ -962,7 +1209,6 @@
             }
         });
 
-        // Toggle Status & Unggah Foto untuk "Sekali Saja"
         document.querySelectorAll('input[name="act-status"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 if(document.getElementById('act-freq').value !== 'sekali') return;
@@ -977,7 +1223,6 @@
             });
         });
 
-        // Toggle Form Upload di Modal Update Status
         document.querySelectorAll('input[name="modal-act-status"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 const val = e.target.value;
@@ -990,7 +1235,6 @@
             });
         });
 
-        // Event listeners untuk filter
         document.getElementById('filter-date').addEventListener('change', () => renderActivities());
         document.getElementById('filter-jobdesk').addEventListener('change', () => renderActivities());
 
@@ -1020,7 +1264,7 @@
 
         formActivity.addEventListener('submit', async function(e) {
             e.preventDefault();
-            if (!currentUser) return showToast("Menunggu koneksi database...", "warning");
+            if (!currentUser || !db) return showToast("Menunggu koneksi database...", "warning");
 
             const date = document.getElementById('act-date').value;
             const freq = document.getElementById('act-freq').value;
@@ -1031,9 +1275,8 @@
             const jdData = jobdesks.find(j => j.id === jobdeskId);
             
             let status = document.querySelector('input[name="act-status"]:checked').value;
-            if(freq !== 'sekali') status = 'Belum Selesai'; // Paksa Belum Selesai untuk tugas Rutin
+            if(freq !== 'sekali') status = 'Belum Selesai'; 
 
-            // Validasi Mingguan
             let selectedDays = [];
             if(freq === 'mingguan') {
                 selectedDays = Array.from(document.querySelectorAll('input[name="act-days"]:checked')).map(el => parseInt(el.value));
@@ -1042,7 +1285,6 @@
                 }
             }
 
-            // --- Penanganan Unggahan Telegram (Hanya jika "Sekali" & status berubah) ---
             if (freq === 'sekali' && (status === 'Selesai' || status === 'Sedang Proses')) {
                 const file = photoInput.files[0];
                 if (!file) return showToast('Pilih foto/video bukti terlebih dahulu!', 'warning');
@@ -1065,11 +1307,10 @@
                 }
             }
 
-            // --- Generate Tanggal Jadwal ---
             const [sYear, sMonth, sDay] = date.split('-').map(Number);
             const startDate = new Date(sYear, sMonth - 1, sDay);
             const endDate = new Date(startDate);
-            endDate.setMonth(endDate.getMonth() + 6); // Generate kejadian untuk 6 bulan ke depan
+            endDate.setMonth(endDate.getMonth() + 6); 
             
             let datesToCreate = [];
 
@@ -1103,9 +1344,8 @@
             lucide.createIcons();
 
             try {
-                // Penulisan Batch (Maksimal 500 per batch, 6 bulan harian = ~180 penulisan)
                 const batch = writeBatch(db);
-                const actColRef = collection(db, 'artifacts', appId, 'public', 'data', 'activities');
+                const actColRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
                 
                 datesToCreate.forEach(dStr => {
                     const newDocRef = doc(actColRef);
@@ -1145,9 +1385,9 @@
         });
 
         window.deleteActivity = async function(id) {
-            if (!currentUser) return;
+            if (!currentUser || !db) return;
             try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', id));
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activities', id));
                 showToast('Aktivitas dihapus.', 'info');
             } catch (error) {
                 showToast('Gagal menghapus aktivitas', 'error');
@@ -1192,7 +1432,7 @@
         };
 
         window.executeDelete = async function() {
-            if (!currentUser) return;
+            if (!currentUser || !db) return;
             const btn = document.getElementById('btn-confirm-delete');
             btn.disabled = true;
             btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Menghapus...';
@@ -1200,14 +1440,14 @@
 
             try {
                 if (deleteTargetType === 'activity') {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', deleteTargetId));
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activities', deleteTargetId));
                     showToast('Aktivitas berhasil dihapus.', 'info');
                 } else if (deleteTargetType === 'jobdesk') {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jobdesks', deleteTargetId));
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks', deleteTargetId));
                     showToast('Jobdesk berhasil dihapus.', 'info');
                 } else if (deleteTargetType === 'all') {
-                    const actRef = collection(db, 'artifacts', appId, 'public', 'data', 'activities');
-                    const jdRef = collection(db, 'artifacts', appId, 'public', 'data', 'jobdesks');
+                    const actRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
+                    const jdRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'jobdesks');
                     
                     const allDocs = [
                         ...activities.map(a => doc(actRef, a.id)), 
@@ -1235,9 +1475,7 @@
         window.toggleActivityStatus = function(id) {
             const act = activities.find(a => a.id === id);
             if(act) {
-                if(act.status === 'Selesai') return; // Mencegah perubahan jika sudah Selesai
-
-                // Langsung buka modal untuk memilih status yang diinginkan
+                if(act.status === 'Selesai') return;
                 openTelegramModal(act);
             }
         };
@@ -1275,17 +1513,13 @@
             document.getElementById('modal-task-name').textContent = activity.task;
             document.getElementById('modal-req-proof').textContent = activity.proofDesc || 'Foto/Video dokumentasi aktivitas.';
             
-            // Set radio button ke status saat ini
             const radios = document.querySelectorAll('input[name="modal-act-status"]');
             radios.forEach(r => {
                 r.checked = (r.value === activity.status);
             });
 
-            // Trigger perubahan untuk menampilkan/menyembunyikan form upload
             const checkedRadio = document.querySelector('input[name="modal-act-status"]:checked');
-            if(checkedRadio) {
-                checkedRadio.dispatchEvent(new Event('change'));
-            }
+            if(checkedRadio) checkedRadio.dispatchEvent(new Event('change'));
             
             const modal = document.getElementById('modal-telegram');
             const content = document.getElementById('modal-telegram-content');
@@ -1314,14 +1548,13 @@
         };
 
         window.submitTelegramModal = async function() {
-            if (!currentUser) return showToast("Menunggu koneksi database...", "warning");
+            if (!currentUser || !db) return showToast("Menunggu koneksi database...", "warning");
 
             const act = activities.find(a => a.id === pendingActivityIdForTelegram);
             if (!act) return;
 
             const newStatus = document.querySelector('input[name="modal-act-status"]:checked').value;
 
-            // Jika status tidak berubah, cukup tutup modal
             if (newStatus === act.status) {
                 closeTelegramModal();
                 return;
@@ -1333,14 +1566,11 @@
             lucide.createIcons();
 
             try {
-                // Jika status barunya butuh bukti file
                 if (newStatus === 'Selesai' || newStatus === 'Sedang Proses') {
                     const fileInput = document.getElementById('modal-photo');
                     const file = fileInput.files[0];
 
-                    if (!file) {
-                        throw new Error('Harap pilih foto/video bukti terlebih dahulu!');
-                    }
+                    if (!file) throw new Error('Harap pilih foto/video bukti terlebih dahulu!');
 
                     const captionHeader = newStatus === 'Selesai' ? '✅ *TUGAS SELESAI*' : '⏳ *TUGAS SEDANG DIPROSES*';
                     const caption = `${captionHeader}\n\n📋 *Jobdesk:* ${act.jobdeskTitle}\n📝 *Aktivitas:* ${act.task}\nℹ️ *Deskripsi:* ${act.desc || '-'}\n📸 *Bukti:* ${act.proofDesc || '-'}\n📅 *Tanggal:* ${act.date}`;
@@ -1349,8 +1579,7 @@
                     await sendToTelegram(file, caption);
                 }
                 
-                // Update ke Firebase
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', act.id), {
+                await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activities', act.id), {
                     status: newStatus
                 });
                 
@@ -1370,7 +1599,6 @@
             const filterDate = document.getElementById('filter-date') ? document.getElementById('filter-date').value : '';
             const filterJobdesk = document.getElementById('filter-jobdesk') ? document.getElementById('filter-jobdesk').value : 'all';
 
-            // Terapkan filter
             let filteredActivities = activities;
             if (filterDate) {
                 filteredActivities = filteredActivities.filter(a => a.date === filterDate);
